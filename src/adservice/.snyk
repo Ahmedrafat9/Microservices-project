@@ -1,0 +1,13 @@
+ignore:
+  "SNYK-JAVA-IONETTY-8367012":
+    - "*":
+        reason: "Waiting for grpc-netty to update netty-common"
+        expires: "2025-09-30"
+  "SNYK-JAVA-IONETTY-8707740":
+    - "*":
+        reason: "False positive or low impact in our use case"
+        expires: "2025-09-30"
+  "SNYK-JAVA-IONETTY-8707739":
+    - "*":
+        reason: "Tracking upgrade in next release cycle"
+        expires: "2025-09-30"
