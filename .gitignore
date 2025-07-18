@@ -26,3 +26,41 @@ obj/
 pkg/
 release/wi-kubernetes-manifests.yaml
 vendor/
+# Python virtual environments
+venv/
+**/venv/
+snyk-venv/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Backup files
+*.bak
+
+# Archives
+*.tar.gz
+*.zip
+*.deb
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Snyk & scan logs
+.snyk
+*.log
+*.json
+
+# Test / temp scripts
+*.sh
+test.sh
+tmp_*
+
+**/venv/
+**/venv/
+*.pyc
+__pycache__/
