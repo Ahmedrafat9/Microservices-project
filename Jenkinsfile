@@ -19,7 +19,7 @@ pipeline {
           sh '''
             if ! command -v protoc &> /dev/null; then
               echo "Installing Protocol Buffers compiler..."
-              apt-get update && apt-get install -y protobuf-compiler
+              sudo apt-get update && apt-get install -y protobuf-compiler
             fi
             protoc --version
           '''
