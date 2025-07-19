@@ -1,6 +1,7 @@
 pipeline {
   agent any
   environment {
+    GIT_LFS_SKIP_SMUDGE = '1'
     DOCKER_REGISTRY = 'ahmedrafat' // update this
     IMAGE_TAG = "${env.BUILD_NUMBER}"  // Jenkins build number as tag
     SNYK_TOKEN = credentials('snyk-token')
