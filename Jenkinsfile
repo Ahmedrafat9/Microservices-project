@@ -9,7 +9,7 @@ pipeline {
     //COSIGN_PASSWORD = credentials('cosign-password')
     //COSIGN_KEY = credentials('cosign-key') // this is a file; might use secret file credential
     }
-  }
+  
   stages {
     stage('Setup Protocol Buffers') {
       steps {
