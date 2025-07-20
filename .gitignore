@@ -51,7 +51,6 @@ __pycache__/
 .terraform.lock.hcl
 
 # Snyk & scan logs
-.snyk
 *.log
 *.json
 

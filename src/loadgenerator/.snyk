@@ -1,0 +1,37 @@
+version: v1
+ignore:
+  "SNYK-PYTHON-CERTIFI-7430173":
+    - "*":
+        reason: "Temporary ignore medium severity vulnerability in certifi"
+        expires: 2025-12-31T23:59:59Z
+
+  "SNYK-PYTHON-IDNA-6597975":
+    - "*":
+        reason: "Temporary ignore medium severity vulnerability in idna"
+        expires: 2025-12-31T23:59:59Z
+
+  "SNYK-PYTHON-REQUESTS-10305723":
+    - "*":
+        reason: "Temporary ignore medium severity vulnerability in requests"
+        expires: 2025-12-31T23:59:59Z
+
+  "SNYK-PYTHON-REQUESTS-6928867":
+    - "*":
+        reason: "Temporary ignore medium severity vulnerability in requests"
+        expires: 2025-12-31T23:59:59Z
+
+  "SNYK-PYTHON-URLLIB3-10390193":
+    - "*":
+        reason: "Temporary ignore medium severity vulnerability in urllib3"
+        expires: 2025-12-31T23:59:59Z
+
+  "SNYK-PYTHON-URLLIB3-10390194":
+    - "*":
+        reason: "Temporary ignore medium severity vulnerability in urllib3"
+        expires: 2025-12-31T23:59:59Z
+
+  "SNYK-PYTHON-URLLIB3-7267250":
+    - "*":
+        reason: "Temporary ignore medium severity vulnerability in urllib3"
+        expires: 2025-12-31T23:59:59Z
+

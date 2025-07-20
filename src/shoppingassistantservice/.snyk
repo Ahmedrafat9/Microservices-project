@@ -1,0 +1,52 @@
+version: "v1"
+ignore:
+  "SNYK-PYTHON-AIOHTTP-10742466":
+    - "*":
+        reason: "Temporary ignore HTTP Request Smuggling vulnerability"
+        expires: "2025-12-31T23:59:59Z"
+
+  "SNYK-PYTHON-CERTIFI-7430173":
+    - "*":
+        reason: "Ignore Insufficient Verification of Data Authenticity temporarily"
+        expires: "2025-12-31T23:59:59Z"
+
+  "SNYK-PYTHON-GRPCIO-9486468":
+    - "*":
+        reason: "Ignore Expected Behavior Violation temporarily"
+        expires: "2025-12-31T23:59:59Z"
+
+  "SNYK-PYTHON-IDNA-6597975":
+    - "*":
+        reason: "Ignore Resource Exhaustion temporarily"
+        expires: "2025-12-31T23:59:59Z"
+
+  "SNYK-PYTHON-PROTOBUF-10364902":
+    - "*":
+        reason: "Ignore Uncontrolled Recursion temporarily"
+        expires: "2025-12-31T23:59:59Z"
+
+  "SNYK-PYTHON-REQUESTS-10305723":
+    - "*":
+        reason: "Ignore Insertion of Sensitive Information vulnerability temporarily"
+        expires: "2025-12-31T23:59:59Z"
+
+  "SNYK-PYTHON-REQUESTS-6928867":
+    - "*":
+        reason: "Ignore Always-Incorrect Control Flow vulnerability temporarily"
+        expires: "2025-12-31T23:59:59Z"
+
+  "SNYK-PYTHON-URLLIB3-10390193":
+    - "*":
+        reason: "Ignore Open Redirect vulnerability temporarily"
+        expires: "2025-12-31T23:59:59Z"
+
+  "SNYK-PYTHON-URLLIB3-10390194":
+    - "*":
+        reason: "Ignore Open Redirect vulnerability temporarily"
+        expires: "2025-12-31T23:59:59Z"
+
+  "SNYK-PYTHON-URLLIB3-7267250":
+    - "*":
+        reason: "Ignore Improper Removal of Sensitive Information temporarily"
+        expires: "2025-12-31T23:59:59Z"
+

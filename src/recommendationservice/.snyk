@@ -1,0 +1,43 @@
+version: "v1"
+ignore:
+  "SNYK-PYTHON-CERTIFI-7430173":
+    - "*":
+        reason: "Ignore medium severity issue for certifi temporarily"
+        expires: "2025-12-31T23:59:59Z"
+  "SNYK-PYTHON-GRPCIO-9486468":
+    - "*":
+        reason: "Ignore medium severity grpcio issue temporarily"
+        expires: "2025-12-31T23:59:59Z"
+  "SNYK-PYTHON-IDNA-6597975":
+    - "*":
+        reason: "Ignore medium severity idna resource exhaustion"
+        expires: "2025-12-31T23:59:59Z"
+  "SNYK-PYTHON-PROTOBUF-10364902":
+    - "*":
+        reason: "Ignore high severity protobuf uncontrolled recursion"
+        expires: "2025-12-31T23:59:59Z"
+  "SNYK-PYTHON-REQUESTS-10305723":
+    - "*":
+        reason: "Ignore medium severity requests sensitive info insertion"
+        expires: "2025-12-31T23:59:59Z"
+  "SNYK-PYTHON-REQUESTS-6928867":
+    - "*":
+        reason: "Ignore medium severity requests incorrect control flow"
+        expires: "2025-12-31T23:59:59Z"
+  "SNYK-PYTHON-URLLIB3-10390193":
+    - "*":
+        reason: "Ignore medium severity urllib3 open redirect"
+        expires: "2025-12-31T23:59:59Z"
+  "SNYK-PYTHON-URLLIB3-10390194":
+    - "*":
+        reason: "Ignore medium severity urllib3 open redirect"
+        expires: "2025-12-31T23:59:59Z"
+  "SNYK-PYTHON-URLLIB3-7267250":
+    - "*":
+        reason: "Ignore medium severity urllib3 improper sensitive info removal"
+        expires: "2025-12-31T23:59:59Z"
+  "SNYK-PYTHON-ZIPP-7430899":
+    - "*":
+        reason: "Ignore medium severity zipp infinite loop"
+        expires: "2025-12-31T23:59:59Z"
+

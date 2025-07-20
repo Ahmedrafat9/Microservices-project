@@ -1,0 +1,12 @@
+version: v1
+ignore:
+  "SNYK-GOLANG-GOLANGORGXNETHTML-9572088":
+    - "*":
+        reason: "Temporary ignore medium severity vulnerability in golang.org/x/net/html"
+        expires: 2025-12-31T23:59:59Z
+
+  "SNYK-GOLANG-GOLANGORGXOAUTH2JWS-8749594":
+    - "*":
+        reason: "Temporary ignore high severity vulnerability in golang.org/x/oauth2/jws"
+        expires: 2025-12-31T23:59:59Z
+

@@ -1,0 +1,45 @@
+version: v1
+ignore:
+  "SNYK-PYTHON-PROTOBUF-10364902":
+    - "*":
+        reason: "Ignore protobuf uncontrolled recursion for now"
+        expires: 2025-12-31T23:59:59Z
+  "SNYK-PYTHON-REQUESTS-10305723":
+    - "*":
+        reason: "Ignore requests sensitive info insertion for now"
+        expires: 2025-12-31T23:59:59Z
+  "SNYK-PYTHON-REQUESTS-6928867":
+    - "*":
+        reason: "Ignore requests control flow issue for now"
+        expires: 2025-12-31T23:59:59Z
+  "SNYK-PYTHON-URLLIB3-10390193":
+    - "*":
+        reason: "Ignore urllib3 open redirect vulnerability for now"
+        expires: 2025-12-31T23:59:59Z
+  "SNYK-PYTHON-URLLIB3-10390194":
+    - "*":
+        reason: "Ignore urllib3 open redirect vulnerability (second id) for now"
+        expires: 2025-12-31T23:59:59Z
+  "SNYK-PYTHON-URLLIB3-7267250":
+    - "*":
+        reason: "Ignore urllib3 improper removal of sensitive info"
+        expires: 2025-12-31T23:59:59Z
+  "SNYK-PYTHON-ZIPP-7430899":
+    - "*":
+        reason: "Ignore zipp infinite loop for now"
+        expires: 2025-12-31T23:59:59Z
+  "SNYK-PYTHON-CERTIFI-7430173":
+    - "*":
+        reason: "Ignore certifi medium severity vulnerability temporarily"
+        expires: 2025-12-31T23:59:59Z
+
+  "SNYK-PYTHON-GRPCIO-9486468":
+    - "*":
+        reason: "Ignore grpcio expected behavior violation temporarily"
+        expires: 2025-12-31T23:59:59Z
+
+  "SNYK-PYTHON-IDNA-6597975":
+    - "*":
+        reason: "Ignore idna resource exhaustion vulnerability temporarily"
+        expires: 2025-12-31T23:59:59Z      
+

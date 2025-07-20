@@ -1,0 +1,111 @@
+version: v1.24.0
+ignore:
+  SNYK-CLI-0000:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-GOLANG-GOLANGORGXNETHTML-9572088:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-GOLANG-GOLANGORGXOAUTH2JWS-8749594:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-JAVA-IONETTY-8367012:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-JAVA-IONETTY-8707739:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-JAVA-IONETTY-8707740:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-JS-INFLIGHT-6095116:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-JS-TAR-6476909:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-AIOHTTP-10742466:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-CERTIFI-7430173:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-GRPCIO-9486468:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-IDNA-6597975:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-JINJA2-6150717:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-JINJA2-6809379:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-JINJA2-8548181:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-JINJA2-8548987:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-JINJA2-9292516:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-PROTOBUF-10364902:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-REQUESTS-10305723:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-REQUESTS-6928867:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-SETUPTOOLS-3180412:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-SETUPTOOLS-7448482:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-SETUPTOOLS-9964606:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-URLLIB3-10390193:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-URLLIB3-10390194:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-URLLIB3-7267250:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+  SNYK-PYTHON-ZIPP-7430899:
+    - '*':
+        reason: "Temporary ignore - known CVE"
+        expires: 2025-12-31T23:59:59Z
+

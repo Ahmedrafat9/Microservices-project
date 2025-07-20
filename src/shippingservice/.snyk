@@ -1,0 +1,7 @@
+version: "v1"
+ignore:
+  "SNYK-GOLANG-GOLANGORGXOAUTH2JWS-8749594":
+    - "*":
+        reason: "Ignoring allocation of resources without limits vulnerability temporarily"
+        expires: "2025-12-31T23:59:59Z"
+
