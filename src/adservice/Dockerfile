@@ -40,6 +40,7 @@
 # EXPOSE 9555
 # ENTRYPOINT ["/app/build/install/hipstershop/bin/AdService"]
 # Use official Gradle image as builder to avoid download issues
+#edit
 FROM gradle:8.4.0-jdk21 AS builder
 
 WORKDIR /app
