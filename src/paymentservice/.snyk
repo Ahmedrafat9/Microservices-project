@@ -10,3 +10,11 @@ ignore:
         reason: "Fixed in later versions, but pinned version can't upgrade yet"
         expires: "2025-12-31T23:59:59Z"
 
+  
+
+  "SNYK-JS-FORMDATA-10841150":
+    - "*":
+        reason: "No fix available currently for form-data@2.5.1 vulnerability (Predictable Value Range). Monitoring for updates."
+        expires: "2025-12-31T00:00:00.000Z"  # غير التاريخ ده حسب الفترة اللي تحبها
+      
+
