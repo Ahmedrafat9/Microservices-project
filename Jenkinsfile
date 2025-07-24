@@ -4,13 +4,17 @@ pipeline {
     GIT_LFS_SKIP_SMUDGE = '1'
     DOCKER_REGISTRY = 'ahmedrafat'
     IMAGE_TAG = "${env.BUILD_NUMBER}"
+    SNYK_TOKEN = credentials('snyk-token')
+    PROJECT_NAME = 'microservices-project'
+    BUILD_NUMBER = "${env.BUILD_NUMBER}"
+
     // Uncomment these when ready to use
     //DOCKERHUB_USERNAME = credentials('dockerhub-username')
     //DOCKERHUB_PASSWORD = credentials('dockerhub-password')
     //COSIGN_PASSWORD = credentials('cosign-password')
     //COSIGN_KEY = credentials('cosign-key')
   }
-  
+  cd
   stages {
     stage('TruffleHog Scan') {
       steps {
@@ -22,7 +26,572 @@ pipeline {
         archiveArtifacts artifacts: 'trufflehog_report.json', allowEmptyArchive: true
       }
     }
+    stage('Setup Snyk') {
+            steps {
+                sh '''
+                    echo "🔧 Setting up Snyk CLI..."
+
+                    npm install snyk
+
+                    ./node_modules/.bin/snyk --version
+
+                    echo "🔐 Authenticating with Snyk..."
+                    ./node_modules/.bin/snyk auth $SNYK_TOKEN
+
+                    echo "✅ Snyk setup completed"
+                '''
+            }
+        }
+        
+    stage('Install Dependencies') {
+        parallel {
+            stage('Frontend (Go)') {
+                steps {
+                    dir('src/frontend') {
+                        sh '''
+                            if [ -f "go.mod" ]; then
+                                echo "🔧 Installing Go dependencies for frontend..."
+                                
+                                # Check if Go is available
+                                if command -v go &> /dev/null; then
+                                    echo "✅ Go found: $(go version)"
+                                    go mod download
+                                    go mod verify
+                                else
+                                    echo "⚠️  Go not available, skipping Go dependencies for frontend"
+                                fi
+                            else
+                                echo "⚠️  No go.mod found for frontend"
+                            fi
+                        '''
+                    }
+                }
+            }
+            
+            stage('Product Catalog Service (Go)') {
+                steps {
+                    dir('src/productcatalogservice') {
+                        sh '''
+                            if [ -f "go.mod" ]; then
+                                echo "🔧 Installing Go dependencies for productcatalogservice..."
+                                
+                                if command -v go &> /dev/null; then
+                                    echo "✅ Go found: $(go version)"
+                                    go mod download
+                                    go mod verify
+                                else
+                                    echo "⚠️  Go not available, skipping Go dependencies for productcatalogservice"
+                                fi
+                            else
+                                echo "⚠️  No go.mod found for productcatalogservice"
+                            fi
+                        '''
+                    }
+                }
+            }
+            
+            stage('Shipping Service (Go)') {
+                steps {
+                    dir('src/shippingservice') {
+                        sh '''
+                            if [ -f "go.mod" ]; then
+                                echo "🔧 Installing Go dependencies for shippingservice..."
+                                
+                                if command -v go &> /dev/null; then
+                                    echo "✅ Go found: $(go version)"
+                                    go mod download
+                                    go mod verify
+                                else
+                                    echo "⚠️  Go not available, skipping Go dependencies for shippingservice"
+                                fi
+                            else
+                                echo "⚠️  No go.mod found for shippingservice"
+                            fi
+                        '''
+                    }
+                }
+            }
+            
+            stage('Checkout Service (Go)') {
+                steps {
+                    dir('src/checkoutservice') {
+                        sh '''
+                            if [ -f "go.mod" ]; then
+                                echo "🔧 Installing Go dependencies for checkoutservice..."
+                                
+                                if command -v go &> /dev/null; then
+                                    echo "✅ Go found: $(go version)"
+                                    go mod download
+                                    go mod verify
+                                else
+                                    echo "⚠️  Go not available, skipping Go dependencies for checkoutservice"
+                                fi
+                            else
+                                echo "⚠️  No go.mod found for checkoutservice"
+                            fi
+                        '''
+                    }
+                }
+            }
+            
+            stage('Cart Service (C#)') {
+                steps {
+                    dir('src/cartservice') {
+                        sh '''
+                            if [ -f "*.csproj" ] || [ -f "*.sln" ]; then
+                                echo "Installing .NET dependencies for cartservice..."
+                                if command -v dotnet &> /dev/null; then
+                                    dotnet restore
+                                else
+                                    echo "Warning: .NET runtime not available, skipping cartservice"
+                                fi
+                            else
+                                echo "No .NET project files found for cartservice"
+                            fi
+                        '''
+                    }
+                }
+            }
+            
+            stage('Currency Service (Node.js)') {
+                steps {
+                    dir('src/currencyservice') {
+                        sh '''
+                            if [ -f "package.json" ]; then
+                                echo "🔧 Installing Node.js dependencies for currencyservice..."
+                                
+                                if command -v npm &> /dev/null; then
+                                    echo "✅ npm found: $(npm --version)"
+                                    npm ci --only=production
+                                else
+                                    echo "⚠️  npm not available, skipping Node.js dependencies for currencyservice"
+                                fi
+                            else
+                                echo "⚠️  No package.json found for currencyservice"
+                            fi
+                        '''
+                    }
+                }
+            }
+            
+            stage('Payment Service (Node.js)') {
+                steps {
+                    dir('src/paymentservice') {
+                        sh '''
+                            if [ -f "package.json" ]; then
+                                echo "🔧 Installing Node.js dependencies for paymentservice..."
+                                
+                                if command -v npm &> /dev/null; then
+                                    echo "✅ npm found: $(npm --version)"
+                                    npm ci --only=production
+                                else
+                                    echo "⚠️  npm not available, skipping Node.js dependencies for paymentservice"
+                                fi
+                            else
+                                echo "⚠️  No package.json found for paymentservice"
+                            fi
+                        '''
+                    }
+                }
+            }
+            
+            stage('Email Service (Python)') {
+                steps {
+                    dir('src/emailservice') {
+                        sh '''
+                            if [ -f "requirements.txt" ]; then
+                                echo "Installing Python dependencies for emailservice..."
+                                if command -v python3 &> /dev/null; then
+                                    python3 -m venv venv
+                                    . venv/bin/activate
+                                    pip install --upgrade pip
+                                    pip install --no-build-isolation -r requirements.txt || echo "Skipping errors"
+
+                                else
+                                    echo "Warning: python3 not available, skipping Python dependencies"
+                                fi
+                            else
+                                echo "No requirements.txt found for emailservice"
+                            fi
+
+
+                        '''
+                    }
+                }
+            }
+            
+            stage('Recommendation Service (Python)') {
+                steps {
+                    dir('src/recommendationservice') {
+                        sh '''
+                            if [ -f "requirements.txt" ]; then
+                                echo "Installing Python dependencies for emailservice..."
+                                if command -v python3 &> /dev/null; then
+                                    python3 -m venv venv
+                                    . venv/bin/activate
+                                    pip install --no-build-isolation -r requirements.txt || echo "Skipping errors"
+
+                                else
+                                    echo "Warning: python3 not available, skipping Python dependencies"
+                                fi
+                            else
+                                echo "No requirements.txt found for emailservice"
+                            fi
+
+                        '''
+                    }
+                }
+            }
+            stage('Shopping Assistant Service (Python)') {
+                steps {
+                    dir('src/shoppingassistantservice') {
+                        sh '''
+                            if [ -f "requirements.txt" ]; then
+                                echo "Installing Python dependencies for shoppingassistantservice..."
+                                if command -v python3 &> /dev/null; then
+                                    rm -rf venv
+                                    python3 -m venv venv
+                                    venv/bin/pip install --upgrade pip
+                                    venv/bin/pip install -r requirements.txt
+                                else
+                                    echo "Warning: python3 not available, skipping Python dependencies"
+                                fi
+                            else
+                                echo "No requirements.txt found for shoppingassistantservice"
+                            fi
+                        '''
+                    }
+                }
+            }
+
+            stage('Load Generator (Python)') {
+                steps {
+                    dir('src/loadgenerator') {
+                        sh '''
+                            if [ -f "requirements.txt" ]; then
+                                echo "Installing Python dependencies for emailservice..."
+                                if command -v python3 &> /dev/null; then
+                                    python3 -m venv venv
+                                    . venv/bin/activate
+                                    pip install --upgrade pip
+                                    pip install -r requirements.txt
+                                else
+                                    echo "Warning: python3 not available, skipping Python dependencies"
+                                fi
+                            else
+                                echo "No requirements.txt found for emailservice"
+                            fi
+
+                        '''
+                    }
+                }
+            }
+            
+            stage('Ad Service (Java)') {
+                steps {
+                    dir('src/adservice') {
+                        sh '''
+                            if [ -f "build.gradle" ] || [ -f "pom.xml" ]; then
+                                echo "Installing Java dependencies for adservice..."
+                                if [ -f "gradlew" ]; then
+                                    chmod +x gradlew
+                                    ./gradlew build -x test -x verifyGoogleJavaFormat --no-daemon
+
+                                elif [ -f "build.gradle" ] && command -v gradle &> /dev/null; then
+                                    ./gradlew build -x test -x verifyGoogleJavaFormat --no-daemon
+                                elif [ -f "pom.xml" ] && command -v mvn &> /dev/null; then
+                                    mvn compile -DskipTests
+                                else
+                                    echo "Warning: No suitable build tool found for Java project"
+                                fi
+                            else
+                                echo "No Java build files found for adservice"
+                            fi
+                        '''
+                    }
+                }
+            }
+        }
+    }
     
+    stage('Snyk Security Scan - Dependencies') {
+        parallel {
+            stage('Snyk Test - Go Services') {
+                steps {
+                    script {
+                        def goServices = ['frontend', 'productcatalogservice', 'shippingservice', 'checkoutservice']
+                        
+                        goServices.each { service ->
+                            dir("src/${service}") {
+                                sh """
+                                    if [ -f "go.mod" ]; then
+                                        echo "🔍 Running Snyk security test for ${service}..."
+                                        
+                                        # Run Snyk test and capture results
+                                        snyk test --severity-threshold=medium --json > snyk-results-${service}.json || SNYK_EXIT=\$?
+                                        
+                                        # Display summary
+                                        if [ -f "snyk-results-${service}.json" ]; then
+                                            echo "📊 Snyk scan completed for ${service}"
+                                            
+                                            # Extract vulnerability counts
+                                            HIGH_COUNT=\$(cat snyk-results-${service}.json | jq -r '.vulnerabilities[]? | select(.severity == "high") | .id' | wc -l)
+                                            MEDIUM_COUNT=\$(cat snyk-results-${service}.json | jq -r '.vulnerabilities[]? | select(.severity == "medium") | .id' | wc -l)
+                                            LOW_COUNT=\$(cat snyk-results-${service}.json | jq -r '.vulnerabilities[]? | select(.severity == "low") | .id' | wc -l)
+                                            
+                                            echo "🚨 ${service} vulnerabilities - High: \$HIGH_COUNT, Medium: \$MEDIUM_COUNT, Low: \$LOW_COUNT"
+                                        fi
+                                        
+                                        # Monitor the project for continuous monitoring
+                                        snyk monitor --project-name="${PROJECT_NAME}-${service}" --target-reference="\$GIT_COMMIT_SHORT" || true
+                                    else
+                                        echo "⚠️  No go.mod found for ${service}, skipping Snyk scan"
+                                    fi
+                                """
+                            }
+                        }
+                    }
+                }
+                post {
+                    always {
+                        archiveArtifacts artifacts: 'src/*/snyk-results-*.json', allowEmptyArchive: true
+                    }
+                }
+            }
+            
+            stage('Snyk Test - Node.js Services') {
+                steps {
+                    script {
+                        def nodeServices = ['currencyservice', 'paymentservice']
+                        
+                        nodeServices.each { service ->
+                            dir("src/${service}") {
+                                sh """
+                                    if [ -f "package.json" ]; then
+                                        echo "🔍 Running Snyk security test for ${service}..."
+                                        
+                                        # Run Snyk test and capture results
+                                        snyk test --severity-threshold=medium --json > snyk-results-${service}.json || SNYK_EXIT=\$?
+                                        
+                                        # Display summary
+                                        if [ -f "snyk-results-${service}.json" ]; then
+                                            echo "📊 Snyk scan completed for ${service}"
+                                            
+                                            # Extract vulnerability counts
+                                            HIGH_COUNT=\$(cat snyk-results-${service}.json | jq -r '.vulnerabilities[]? | select(.severity == "high") | .id' | wc -l)
+                                            MEDIUM_COUNT=\$(cat snyk-results-${service}.json | jq -r '.vulnerabilities[]? | select(.severity == "medium") | .id' | wc -l)
+                                            LOW_COUNT=\$(cat snyk-results-${service}.json | jq -r '.vulnerabilities[]? | select(.severity == "low") | .id' | wc -l)
+                                            
+                                            echo "🚨 ${service} vulnerabilities - High: \$HIGH_COUNT, Medium: \$MEDIUM_COUNT, Low: \$LOW_COUNT"
+                                        fi
+                                        
+                                        # Monitor the project
+                                        snyk monitor --project-name="${PROJECT_NAME}-${service}" --target-reference="\$GIT_COMMIT_SHORT" || true
+                                    else
+                                        echo "⚠️  No package.json found for ${service}, skipping Snyk scan"
+                                    fi
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+            
+            stage('Snyk Test - Python Services') {
+                steps {
+                    script {
+                        def pythonServices = ['emailservice', 'recommendationservice', 'loadgenerator']
+                        
+                        pythonServices.each { service ->
+                            dir("src/${service}") {
+                                sh """
+                                    if [ -f "requirements.txt" ]; then
+                                        echo "🔍 Running Snyk security test for ${service}..."
+                                        
+                                        # Run Snyk test and capture results
+                                        snyk test --severity-threshold=medium --json > snyk-results-${service}.json || SNYK_EXIT=\$?
+                                        
+                                        # Display summary
+                                        if [ -f "snyk-results-${service}.json" ]; then
+                                            echo "📊 Snyk scan completed for ${service}"
+                                            
+                                            # Extract vulnerability counts
+                                            HIGH_COUNT=\$(cat snyk-results-${service}.json | jq -r '.vulnerabilities[]? | select(.severity == "high") | .id' | wc -l)
+                                            MEDIUM_COUNT=\$(cat snyk-results-${service}.json | jq -r '.vulnerabilities[]? | select(.severity == "medium") | .id' | wc -l)
+                                            LOW_COUNT=\$(cat snyk-results-${service}.json | jq -r '.vulnerabilities[]? | select(.severity == "low") | .id' | wc -l)
+                                            
+                                            echo "🚨 ${service} vulnerabilities - High: \$HIGH_COUNT, Medium: \$MEDIUM_COUNT, Low: \$LOW_COUNT"
+                                        fi
+                                        
+                                        # Monitor the project
+                                        snyk monitor --project-name="${PROJECT_NAME}-${service}" --target-reference="\$GIT_COMMIT_SHORT" || true
+                                    else
+                                        echo "⚠️  No requirements.txt found for ${service}, skipping Snyk scan"
+                                    fi
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+            
+            stage('Snyk Test - Java Service') {
+                steps {
+                    dir('src/adservice') {
+                        sh '''
+                            if [ -f "build.gradle" ] || [ -f "pom.xml" ]; then
+                                echo "🔍 Running Snyk security test for adservice..."
+                                
+                                # Run Snyk test and capture results
+                                snyk test --severity-threshold=medium --json > snyk-results-adservice.json || SNYK_EXIT=$?
+                                
+                                # Display summary
+                                if [ -f "snyk-results-adservice.json" ]; then
+                                    echo "📊 Snyk scan completed for adservice"
+                                    
+                                    # Extract vulnerability counts
+                                    HIGH_COUNT=$(cat snyk-results-adservice.json | jq -r '.vulnerabilities[]? | select(.severity == "high") | .id' | wc -l)
+                                    MEDIUM_COUNT=$(cat snyk-results-adservice.json | jq -r '.vulnerabilities[]? | select(.severity == "medium") | .id' | wc -l)
+                                    LOW_COUNT=$(cat snyk-results-adservice.json | jq -r '.vulnerabilities[]? | select(.severity == "low") | .id' | wc -l)
+                                    
+                                    echo "🚨 adservice vulnerabilities - High: $HIGH_COUNT, Medium: $MEDIUM_COUNT, Low: $LOW_COUNT"
+                                fi
+                                
+                                # Monitor the project
+                                snyk monitor --project-name="${PROJECT_NAME}-adservice" --target-reference="$GIT_COMMIT_SHORT" || true
+                            else
+                                echo "⚠️  No Java build files found for adservice, skipping Snyk scan"
+                            fi
+                        '''
+                    }
+                }
+            }
+            
+            stage('Snyk Test - .NET Service') {
+                steps {
+                    dir('src/cartservice') {
+                        sh '''
+                            if find . -name "*.csproj" -o -name "*.sln" | grep -q .; then
+                                echo "🔍 Running Snyk security test for cartservice..."
+                                
+                                # Run Snyk test and capture results
+                                snyk test --severity-threshold=medium --json > snyk-results-cartservice.json || SNYK_EXIT=$?
+                                
+                                # Display summary
+                                if [ -f "snyk-results-cartservice.json" ]; then
+                                    echo "📊 Snyk scan completed for cartservice"
+                                    
+                                    # Extract vulnerability counts
+                                    HIGH_COUNT=$(cat snyk-results-cartservice.json | jq -r '.vulnerabilities[]? | select(.severity == "high") | .id' | wc -l)
+                                    MEDIUM_COUNT=$(cat snyk-results-cartservice.json | jq -r '.vulnerabilities[]? | select(.severity == "medium") | .id' | wc -l)
+                                    LOW_COUNT=$(cat snyk-results-cartservice.json | jq -r '.vulnerabilities[]? | select(.severity == "low") | .id' | wc -l)
+                                    
+                                    echo "🚨 cartservice vulnerabilities - High: $HIGH_COUNT, Medium: $MEDIUM_COUNT, Low: $LOW_COUNT"
+                                fi
+                                
+                                # Monitor the project
+                                snyk monitor --project-name="${PROJECT_NAME}-cartservice" --target-reference="$GIT_COMMIT_SHORT" || true
+                            else
+                                echo "⚠️  No .NET project files found for cartservice, skipping Snyk scan"
+                            fi
+                        '''
+                    }
+                }
+            }
+        }
+    }
+    
+    stage('Snyk Code Analysis') {
+        parallel {
+            stage('Code Scan - Go Services') {
+                steps {
+                    script {
+                        def goServices = ['frontend', 'productcatalogservice', 'shippingservice', 'checkoutservice']
+                        
+                        goServices.each { service ->
+                            dir("src/${service}") {
+                                sh """
+                                    if [ -f "go.mod" ]; then
+                                        echo "🔍 Running Snyk Code analysis for ${service}..."
+                                        
+                                        # Run Snyk Code scan
+                                        snyk code test --json > snyk-code-${service}.json || SNYK_CODE_EXIT=\$?
+                                        
+                                        if [ -f "snyk-code-${service}.json" ]; then
+                                            echo "📊 Snyk Code scan completed for ${service}"
+                                            
+                                            # Extract issue counts
+                                            HIGH_COUNT=\$(cat snyk-code-${service}.json | jq -r '.runs[]?.results[]? | select(.level == "error") | .ruleId' | wc -l)
+                                            MEDIUM_COUNT=\$(cat snyk-code-${service}.json | jq -r '.runs[]?.results[]? | select(.level == "warning") | .ruleId' | wc -l)
+                                            LOW_COUNT=\$(cat snyk-code-${service}.json | jq -r '.runs[]?.results[]? | select(.level == "note") | .ruleId' | wc -l)
+                                            
+                                            echo "🚨 ${service} code issues - High: \$HIGH_COUNT, Medium: \$MEDIUM_COUNT, Low: \$LOW_COUNT"
+                                        fi
+                                    else
+                                        echo "⚠️  No go.mod found for ${service}, skipping Snyk Code scan"
+                                    fi
+                                """
+                            }
+                        }
+                    }
+                }
+                post {
+                    always {
+                        archiveArtifacts artifacts: 'src/*/snyk-code-*.json', allowEmptyArchive: true
+                    }
+                }
+            }
+            
+            stage('Code Scan - Other Services') {
+                steps {
+                    script {
+                        def otherServices = ['currencyservice', 'paymentservice', 'emailservice', 'recommendationservice', 'loadgenerator', 'adservice', 'cartservice']
+                        
+                        otherServices.each { service ->
+                            dir("src/${service}") {
+                                sh """
+                                    echo "🔍 Running Snyk Code analysis for ${service}..."
+                                    
+                                    # Run Snyk Code scan
+                                    snyk code test --json > snyk-code-${service}.json || SNYK_CODE_EXIT=\$?
+                                    
+                                    if [ -f "snyk-code-${service}.json" ]; then
+                                        echo "📊 Snyk Code scan completed for ${service}"
+                                        
+                                        # Extract issue counts
+                                        HIGH_COUNT=\$(cat snyk-code-${service}.json | jq -r '.runs[]?.results[]? | select(.level == "error") | .ruleId' | wc -l)
+                                        MEDIUM_COUNT=\$(cat snyk-code-${service}.json | jq -r '.runs[]?.results[]? | select(.level == "warning") | .ruleId' | wc -l)
+                                        LOW_COUNT=\$(cat snyk-code-${service}.json | jq -r '.runs[]?.results[]? | select(.level == "note") | .ruleId' | wc -l)
+                                        
+                                        echo "🚨 ${service} code issues - High: \$HIGH_COUNT, Medium: \$MEDIUM_COUNT, Low: \$LOW_COUNT"
+                                    fi
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    stage('Snyk Scan All Projects') {
+        steps {
+            // Set up python venvs and install requirements for Python projects
+            sh '''
+                for dir in src/emailservice src/loadgenerator src/recommendationservice src/shoppingassistantservice; do
+                    if [ -f "$dir/requirements.txt" ]; then
+                        python3 -m venv "$dir/venv"
+                        . "$dir/venv/bin/activate"
+                        pip install --upgrade pip setuptools wheel
+                        pip install -r "$dir/requirements.txt" || echo "Skipping errors"
+                        deactivate
+                    fi
+                done
+            '''
+    
+            // Run Snyk test on all projects after dependencies are installed
+            sh './node_modules/.bin/snyk test --all-projects'
+        }
+    }  
     stage('Build Docker Images') {
       parallel {
         stage('adservice') {
@@ -386,4 +955,52 @@ pipeline {
       echo 'Pipeline failed! Check logs for details.'
     }
   }
+}
+
+pipeline {
+    agent any
+    environment {
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        GCP_PROJECT = "task-464917"
+        KEY_LOCATION = "global"
+        KEY_RING = "my-keyring"
+        KEY_NAME = "cosign-key"
+    }
+    stages {
+        stage('Build, Push & Sign Images') {
+            steps {
+                withCredentials([
+                    file(credentialsId: 'gcp-sa-json', variable: 'GOOGLE_APPLICATION_CREDENTIALS'),
+                    usernamePassword(credentialsId: 'Dockerhub-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')
+                ]) {
+                    sh '''
+                        # Authenticate gcloud
+                        gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                        
+                        # Login to Docker Hub
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        
+                        # Install cosign if not installed
+                        which cosign || (curl -sSL https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 -o /usr/local/bin/cosign && chmod +x /usr/local/bin/cosign)
+                        
+                        SERVICES="adservice cartservice checkoutservice currencyservice emailservice frontend loadgenerator paymentservice productcatalogservice recommendationservice shippingservice shoppingassistantservice"
+                        
+                        for svc in $SERVICES; do
+                            if [ "$svc" = "cartservice" ]; then
+                                echo "🚀 Building cartservice with custom Dockerfile"
+                                docker build -f ./src/cartservice/src/Dockerfile -t $DOCKER_USER/$svc:${IMAGE_TAG} ./src/cartservice
+                            else
+                                echo "🚀 Building $svc"
+                                docker build -t $DOCKER_USER/$svc:${IMAGE_TAG} ./src/$svc
+                            fi
+                            
+                            docker push $DOCKER_USER/$svc:${IMAGE_TAG}
+                            
+                            cosign sign --key "gcpkms://projects/${GCP_PROJECT}/locations/${KEY_LOCATION}/keyRings/${KEY_RING}/cryptoKeys/${KEY_NAME}" --yes $DOCKER_USER/$svc:${IMAGE_TAG}
+                        done
+                    '''
+                }
+            }
+        }
+    }
 }
