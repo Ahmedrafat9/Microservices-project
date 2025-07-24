@@ -1004,3 +1004,48 @@ pipeline {
         }
     }
 }
+pipeline {
+    agent any
+
+    environment {
+        REPORT_FILE = 'trufflehog-report.json'
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Run TruffleHog Scan') {
+            steps {
+                script {
+                    def output = sh(script: 'docker run --rm -v "$PWD":/src trufflesecurity/trufflehog:latest filesystem --json /src', returnStdout: true).trim()
+                    writeFile file: REPORT_FILE, text: output
+                }
+            }
+        }
+
+        stage('Show Report Summary') {
+            steps {
+                script {
+                    def reportText = readFile(REPORT_FILE)
+                    echo reportText.take(5000)
+                }
+            }
+        }
+
+        stage('Archive Report') {
+            steps {
+                archiveArtifacts artifacts: "${REPORT_FILE}", allowEmptyArchive: false
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "✅ Pipeline finished. Check the TruffleHog report in build artifacts."
+        }
+    }
+}
