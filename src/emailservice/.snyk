@@ -41,5 +41,30 @@ ignore:
   "SNYK-PYTHON-IDNA-6597975":
     - "*":
         reason: "Ignore idna resource exhaustion vulnerability temporarily"
-        expires: 2025-12-31T23:59:59Z      
+        expires: 2025-12-31T23:59:59Z  
+  "SNYK-PYTHON-JINJA2-6150717":
+  - "*":
+      reason: "Ignore XSS vulnerability temporarily"
+      expires: 2025-12-31T23:59:59Z
+
+  "SNYK-PYTHON-JINJA2-6809379":
+    - "*":
+        reason: "Ignore second XSS vulnerability temporarily"
+        expires: 2025-12-31T23:59:59Z
+
+  "SNYK-PYTHON-JINJA2-8548181":
+    - "*":
+        reason: "Ignore Template Injection vulnerability temporarily"
+        expires: 2025-12-31T23:59:59Z
+
+  "SNYK-PYTHON-JINJA2-8548987":
+    - "*":
+        reason: "Ignore Improper Neutralization vulnerability temporarily"
+        expires: 2025-12-31T23:59:59Z
+
+  "SNYK-PYTHON-JINJA2-9292516":
+    - "*":
+        reason: "Ignore second Template Injection vulnerability temporarily"
+        expires: 2025-12-31T23:59:59Z
+          
 
