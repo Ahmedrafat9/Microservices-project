@@ -1094,8 +1094,7 @@ pipeline {
             steps {
                 sh '''
                     echo "🧹 Running Docker system cleanup..."
-                    docker system prune -f || true
-                    docker image prune -f || true
+                    
                 '''
             }
         }
