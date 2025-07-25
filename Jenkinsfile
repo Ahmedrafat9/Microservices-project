@@ -94,11 +94,11 @@ pipeline {
                                     def nodeServices = ['currencyservice', 'paymentservice']
                                     nodeServices.each { service ->
                                         dir("src/${service}") {
-                                            sh '''
+                                            sh """
                                                 if [ -f "package.json" ]; then
-                                                    echo "🔧 Installing Node.js dependencies for ''' + service + '''..."
+                                                    echo "🔧 Installing Node.js dependencies for ${service}..."
                                                     if command -v npm &> /dev/null; then
-                                                        echo "✅ npm found: $(npm --version)"
+                                                        echo "✅ npm found: \$(npm --version)"
                                                         npm ci --only=production
                                                     else
                                                         echo "⚠️  npm not available, skipping dependencies"
@@ -106,7 +106,7 @@ pipeline {
                                                 else
                                                     echo "⚠️  No package.json found"
                                                 fi
-                                            '''
+                                            """
                                         }
                                     }
                                 }
