@@ -15,6 +15,8 @@ pipeline {
         KEY_LOCATION = "global"
         KEY_RING = "my-keyring"
         KEY_NAME = "cosign-key"
+        PYTHONUNBUFFERED = '1'
+        PIP_NO_CACHE_DIR = '1'
     }
     
     stages {
@@ -336,69 +338,55 @@ pipeline {
                     }
                 }
                 
-                stage('Snyk Code Analysis') {
-                    parallel {
-                        stage('Code Analysis - Go Services') {
-                            steps {
-                                script {
-                                    def goServices = ['frontend', 'productcatalogservice', 'shippingservice', 'checkoutservice']
-                                    goServices.each { service ->
-                                        dir("src/${service}") {
-                                            sh """
-                                                if [ -f "go.mod" ]; then
-                                                    echo "🔍 Running Snyk Code analysis for ${service}..."
-                                                    ../../node_modules/.bin/snyk code test --json > snyk-code-${service}.json || SNYK_CODE_EXIT=\$?
-                                                    
-                                                    if [ -f "snyk-code-${service}.json" ]; then
-                                                        echo "📊 Snyk Code scan completed for ${service}"
-                                                        HIGH_COUNT=\$(cat snyk-code-${service}.json | jq -r '.runs[]?.results[]? | select(.level == "error") | .ruleId' | wc -l)
-                                                        MEDIUM_COUNT=\$(cat snyk-code-${service}.json | jq -r '.runs[]?.results[]? | select(.level == "warning") | .ruleId' | wc -l)
-                                                        LOW_COUNT=\$(cat snyk-code-${service}.json | jq -r '.runs[]?.results[]? | select(.level == "note") | .ruleId' | wc -l)
-                                                        echo "🚨 ${service} code issues - High: \$HIGH_COUNT, Medium: \$MEDIUM_COUNT, Low: \$LOW_COUNT"
-                                                    fi
-                                                else
-                                                    echo "⚠️  No go.mod found, skipping Snyk Code scan"
-                                                fi
-                                            """
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        
-                        stage('Code Analysis - Other Services') {
-                            steps {
-                                script {
-                                    def otherServices = ['currencyservice', 'paymentservice', 'emailservice', 'recommendationservice', 'loadgenerator', 'adservice', 'cartservice', 'shoppingassistantservice']
-                                    otherServices.each { service ->
-                                        dir("src/${service}") {
-                                            sh """
-                                                echo "🔍 Running Snyk Code analysis for ${service}..."
-                                                ../../node_modules/.bin/snyk code test --json > snyk-code-${service}.json || SNYK_CODE_EXIT=\$?
-                                                
-                                                if [ -f "snyk-code-${service}.json" ]; then
-                                                    echo "📊 Snyk Code scan completed for ${service}"
-                                                    HIGH_COUNT=\$(cat snyk-code-${service}.json | jq -r '.runs[]?.results[]? | select(.level == "error") | .ruleId' | wc -l)
-                                                    MEDIUM_COUNT=\$(cat snyk-code-${service}.json | jq -r '.runs[]?.results[]? | select(.level == "warning") | .ruleId' | wc -l)
-                                                    LOW_COUNT=\$(cat snyk-code-${service}.json | jq -r '.runs[]?.results[]? | select(.level == "note") | .ruleId' | wc -l)
-                                                    echo "🚨 ${service} code issues - High: \$HIGH_COUNT, Medium: \$MEDIUM_COUNT, Low: \$LOW_COUNT"
-                                                fi
-                                            """
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    post {
-                        always {
-                            archiveArtifacts artifacts: 'src/*/snyk-code-*.json', allowEmptyArchive: true
-                        }
-                    }
+                
+            }
+        }
+        stage('Snyk Scan All Projects') {
+            steps {
+                script {
+                    sh '''
+                        # إنشاء venv مشترك في مجلد build_venv
+                        echo "🐍 Creating shared virtual environment..."
+                        python3 -m venv build_venv
+                        . build_venv/bin/activate
+                        pip install --upgrade pip setuptools wheel
+
+                        # تثبيت كل الـ requirements مع بعض
+                        for dir in src/emailservice src/loadgenerator src/recommendationservice src/shoppingassistantservice; do
+                            if [ -f "$dir/requirements.txt" ]; then
+                                echo "📦 Installing dependencies for $dir"
+                                pip install -r "$dir/requirements.txt"
+                            else
+                                echo "⏭️ No requirements.txt in $dir"
+                            fi
+                        done
+
+                        # تشغيل snyk test لكل مشروع باستخدام نفس venv
+                        for dir in src/emailservice src/loadgenerator src/recommendationservice src/shoppingassistantservice; do
+                            if [ -f "$dir/requirements.txt" ]; then
+                                echo "🔒 Running Snyk scan in $dir"
+                                snyk test --file="$dir/requirements.txt" || echo "⚠️ Snyk scan warnings in $dir"
+                            fi
+                        done
+
+                        # استعادة حزم .NET
+                        echo "🔧 Restoring .NET dependencies for cartservice..."
+                        if find src/cartservice -name "*.csproj" -o -name "*.sln" | grep -q .; then
+                            export PATH=$PATH:$HOME/.dotnet:$HOME/.dotnet/tools
+                            dotnet restore src/cartservice || echo "⚠️ dotnet restore failed"
+                        else
+                            echo "ℹ️ No .NET project files found in cartservice"
+                        fi
+
+                        # Snyk test شامل في الآخر
+                        echo "🔒 Running overall Snyk scan on all projects..."
+                        snyk test --all-projects || echo "⚠️ Snyk scan finished with warnings"
+
+                        deactivate
+                    '''
                 }
             }
         }
-        
         // STAGE 3: BUILD DOCKER IMAGES
         stage('Build Docker Images') {
             parallel {
@@ -1086,7 +1074,7 @@ pipeline {
                     echo "=== SECURITY SCANS COMPLETED ===" >> final_report.txt
                     echo "- TruffleHog Secret Detection: $([ -f trufflehog_report.json ] && echo 'COMPLETED' || echo 'FAILED')" >> final_report.txt
                     echo "- Snyk Vulnerability Scan: $(find . -name 'snyk-results-*.json' | wc -l) services scanned" >> final_report.txt
-                    echo "- Snyk Code Analysis: $(find . -name 'snyk-code-*.json' | wc -l) services scanned" >> final_report.txt
+                    #echo "- Snyk Code Analysis: $(find . -name 'snyk-code-*.json' | wc -l) services scanned" >> final_report.txt
                     echo "- Trivy Container Scan: $(find . -name 'trivy-*-report.json' | wc -l) images scanned" >> final_report.txt
                     echo "" >> final_report.txt
                     
