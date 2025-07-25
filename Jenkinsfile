@@ -99,7 +99,7 @@ pipeline {
                                                     echo "🔧 Installing Node.js dependencies for ${service}..."
                                                     if command -v npm &> /dev/null; then
                                                         echo "✅ npm found: \$(npm --version)"
-                                                        npm ci --only=production
+                                                        npm ci --omit=dev
                                                     else
                                                         echo "⚠️  npm not available, skipping dependencies"
                                                     fi
