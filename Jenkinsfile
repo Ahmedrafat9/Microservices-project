@@ -21,10 +21,10 @@ pipeline {
     }
     
     stages {
-        stages {
+        
         stage('Checkout') {
             steps {
-                
+                // هنا بيتم جلب الكود من Git
                 checkout scm
             }
         }
