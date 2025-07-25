@@ -21,6 +21,13 @@ pipeline {
     }
     
     stages {
+        stages {
+        stage('Checkout') {
+            steps {
+                
+                checkout scm
+            }
+        }
         // STAGE 1: TRUFFLEHOG SECRET DETECTION
         stage('TruffleHog Secret Detection') {
             steps {
