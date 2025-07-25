@@ -17,6 +17,7 @@ pipeline {
         KEY_NAME = "cosign-key"
         PYTHONUNBUFFERED = '1'
         PIP_NO_CACHE_DIR = '1'
+        
     }
     
     stages {
@@ -168,6 +169,7 @@ pipeline {
                             steps {
                                 dir('src/cartservice') {
                                     sh '''
+                                        export PATH=$PATH:$HOME/.dotnet:$HOME/.dotnet/tools
                                         if find . -name "*.csproj" -o -name "*.sln" | grep -q .; then
                                             echo "🔧 Installing .NET dependencies for cartservice..."
                                             if command -v dotnet &> /dev/null; then
@@ -338,9 +340,10 @@ pipeline {
                     }
                 }
                 
-                
+
             }
         }
+        
         stage('Snyk Scan All Projects') {
             steps {
                 script {
@@ -687,9 +690,11 @@ pipeline {
                         # Install cosign if not available
                         if ! command -v cosign &> /dev/null; then
                             echo "🔧 Installing Cosign..."
-                            curl -O -L "https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64"
-                            sudo mv cosign-linux-amd64 /usr/local/bin/cosign
-                            sudo chmod +x /usr/local/bin/cosign
+                            mkdir -p $HOME/.local/bin
+                            curl -sSL https://github.com/sigstore/cosign/releases/latest/download/cosign-linux-amd64 -o $HOME/.local/bin/cosign
+                            chmod +x $HOME/.local/bin/cosign
+                            export PATH=$HOME/.local/bin:$PATH
+
                         fi
                         
                         echo "✅ Cosign version: $(cosign version)"
@@ -698,7 +703,148 @@ pipeline {
             }
         }
         
-        // STAGE 6: COSIGN SIGN IMAGES
+        
+        // STAGE 7: PUSH TO DOCKER REGISTRY
+        stage('Push to Docker Registry') {
+            stages {
+                stage('Docker Registry Login') {
+                    steps {
+                        script {
+                            withCredentials([usernamePassword(credentialsId: 'Dockerhub-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                                sh '''
+                                    echo "🔐 Logging into Docker Hub..."
+                                    echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                                    echo "✅ Successfully logged into Docker Hub"
+                                '''
+                            }
+                        }
+                    }
+                }
+                
+                stage('Push Images') {
+                    parallel {
+                        stage('adservice') {
+                            steps {
+                                sh """
+                                    echo "📤 Pushing adservice image..."
+                                    docker push ${DOCKER_REGISTRY}/adservice:${IMAGE_TAG}
+                                    echo "✅ Successfully pushed adservice:${IMAGE_TAG}"
+                                """
+                            }
+                        }
+                        
+                        stage('cartservice') {
+                            steps {
+                                sh """
+                                    echo "📤 Pushing cartservice image..."
+                                    docker push ${DOCKER_REGISTRY}/cartservice:${IMAGE_TAG}
+                                    echo "✅ Successfully pushed cartservice:${IMAGE_TAG}"
+                                """
+                            }
+                        }
+                        
+                        stage('checkoutservice') {
+                            steps {
+                                sh """
+                                    echo "📤 Pushing checkoutservice image..."
+                                    docker push ${DOCKER_REGISTRY}/checkoutservice:${IMAGE_TAG}
+                                    echo "✅ Successfully pushed checkoutservice:${IMAGE_TAG}"
+                                """
+                            }
+                        }
+                        
+                        stage('currencyservice') {
+                            steps {
+                                sh """
+                                    echo "📤 Pushing currencyservice image..."
+                                    docker push ${DOCKER_REGISTRY}/currencyservice:${IMAGE_TAG}
+                                    echo "✅ Successfully pushed currencyservice:${IMAGE_TAG}"
+                                """
+                            }
+                        }
+                        
+                        stage('emailservice') {
+                            steps {
+                                sh """
+                                    echo "📤 Pushing emailservice image..."
+                                    docker push ${DOCKER_REGISTRY}/emailservice:${IMAGE_TAG}
+                                    echo "✅ Successfully pushed emailservice:${IMAGE_TAG}"
+                                """
+                            }
+                        }
+                        
+                        stage('frontend') {
+                            steps {
+                                sh """
+                                    echo "📤 Pushing frontend image..."
+                                    docker push ${DOCKER_REGISTRY}/frontend:${IMAGE_TAG}
+                                    echo "✅ Successfully pushed frontend:${IMAGE_TAG}"
+                                """
+                            }
+                        }
+                        
+                        stage('loadgenerator') {
+                            steps {
+                                sh """
+                                    echo "📤 Pushing loadgenerator image..."
+                                    docker push ${DOCKER_REGISTRY}/loadgenerator:${IMAGE_TAG}
+                                    echo "✅ Successfully pushed loadgenerator:${IMAGE_TAG}"
+                                """
+                            }
+                        }
+                        
+                        stage('paymentservice') {
+                            steps {
+                                sh """
+                                    echo "📤 Pushing paymentservice image..."
+                                    docker push ${DOCKER_REGISTRY}/paymentservice:${IMAGE_TAG}
+                                    echo "✅ Successfully pushed paymentservice:${IMAGE_TAG}"
+                                """
+                            }
+                        }
+                        
+                        stage('productcatalogservice') {
+                            steps {
+                                sh """
+                                    echo "📤 Pushing productcatalogservice image..."
+                                    docker push ${DOCKER_REGISTRY}/productcatalogservice:${IMAGE_TAG}
+                                    echo "✅ Successfully pushed productcatalogservice:${IMAGE_TAG}"
+                                """
+                            }
+                        }
+                        
+                        stage('recommendationservice') {
+                            steps {
+                                sh """
+                                    echo "📤 Pushing recommendationservice image..."
+                                    docker push ${DOCKER_REGISTRY}/recommendationservice:${IMAGE_TAG}
+                                    echo "✅ Successfully pushed recommendationservice:${IMAGE_TAG}"
+                                """
+                            }
+                        }
+                        
+                        stage('shippingservice') {
+                            steps {
+                                sh """
+                                    echo "📤 Pushing shippingservice image..."
+                                    docker push ${DOCKER_REGISTRY}/shippingservice:${IMAGE_TAG}
+                                    echo "✅ Successfully pushed shippingservice:${IMAGE_TAG}"
+                                """
+                            }
+                        }
+                        
+                        stage('shoppingassistantservice') {
+                            steps {
+                                sh """
+                                    echo "📤 Pushing shoppingassistantservice image..."
+                                    docker push ${DOCKER_REGISTRY}/shoppingassistantservice:${IMAGE_TAG}
+                                    echo "✅ Successfully pushed shoppingassistantservice:${IMAGE_TAG}"
+                                """
+                            }
+                        }
+                    }
+                }
+                // STAGE 6: COSIGN SIGN IMAGES
         stage('Cosign Sign Images') {
             parallel {
                 stage('Sign adservice') {
@@ -871,147 +1017,6 @@ pipeline {
             }
         }
         
-        // STAGE 7: PUSH TO DOCKER REGISTRY
-        stage('Push to Docker Registry') {
-            stages {
-                stage('Docker Registry Login') {
-                    steps {
-                        script {
-                            withCredentials([usernamePassword(credentialsId: 'Dockerhub-cred', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                                sh '''
-                                    echo "🔐 Logging into Docker Hub..."
-                                    echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-                                    echo "✅ Successfully logged into Docker Hub"
-                                '''
-                            }
-                        }
-                    }
-                }
-                
-                stage('Push Images') {
-                    parallel {
-                        stage('adservice') {
-                            steps {
-                                sh """
-                                    echo "📤 Pushing adservice image..."
-                                    docker push ${DOCKER_REGISTRY}/adservice:${IMAGE_TAG}
-                                    echo "✅ Successfully pushed adservice:${IMAGE_TAG}"
-                                """
-                            }
-                        }
-                        
-                        stage('cartservice') {
-                            steps {
-                                sh """
-                                    echo "📤 Pushing cartservice image..."
-                                    docker push ${DOCKER_REGISTRY}/cartservice:${IMAGE_TAG}
-                                    echo "✅ Successfully pushed cartservice:${IMAGE_TAG}"
-                                """
-                            }
-                        }
-                        
-                        stage('checkoutservice') {
-                            steps {
-                                sh """
-                                    echo "📤 Pushing checkoutservice image..."
-                                    docker push ${DOCKER_REGISTRY}/checkoutservice:${IMAGE_TAG}
-                                    echo "✅ Successfully pushed checkoutservice:${IMAGE_TAG}"
-                                """
-                            }
-                        }
-                        
-                        stage('currencyservice') {
-                            steps {
-                                sh """
-                                    echo "📤 Pushing currencyservice image..."
-                                    docker push ${DOCKER_REGISTRY}/currencyservice:${IMAGE_TAG}
-                                    echo "✅ Successfully pushed currencyservice:${IMAGE_TAG}"
-                                """
-                            }
-                        }
-                        
-                        stage('emailservice') {
-                            steps {
-                                sh """
-                                    echo "📤 Pushing emailservice image..."
-                                    docker push ${DOCKER_REGISTRY}/emailservice:${IMAGE_TAG}
-                                    echo "✅ Successfully pushed emailservice:${IMAGE_TAG}"
-                                """
-                            }
-                        }
-                        
-                        stage('frontend') {
-                            steps {
-                                sh """
-                                    echo "📤 Pushing frontend image..."
-                                    docker push ${DOCKER_REGISTRY}/frontend:${IMAGE_TAG}
-                                    echo "✅ Successfully pushed frontend:${IMAGE_TAG}"
-                                """
-                            }
-                        }
-                        
-                        stage('loadgenerator') {
-                            steps {
-                                sh """
-                                    echo "📤 Pushing loadgenerator image..."
-                                    docker push ${DOCKER_REGISTRY}/loadgenerator:${IMAGE_TAG}
-                                    echo "✅ Successfully pushed loadgenerator:${IMAGE_TAG}"
-                                """
-                            }
-                        }
-                        
-                        stage('paymentservice') {
-                            steps {
-                                sh """
-                                    echo "📤 Pushing paymentservice image..."
-                                    docker push ${DOCKER_REGISTRY}/paymentservice:${IMAGE_TAG}
-                                    echo "✅ Successfully pushed paymentservice:${IMAGE_TAG}"
-                                """
-                            }
-                        }
-                        
-                        stage('productcatalogservice') {
-                            steps {
-                                sh """
-                                    echo "📤 Pushing productcatalogservice image..."
-                                    docker push ${DOCKER_REGISTRY}/productcatalogservice:${IMAGE_TAG}
-                                    echo "✅ Successfully pushed productcatalogservice:${IMAGE_TAG}"
-                                """
-                            }
-                        }
-                        
-                        stage('recommendationservice') {
-                            steps {
-                                sh """
-                                    echo "📤 Pushing recommendationservice image..."
-                                    docker push ${DOCKER_REGISTRY}/recommendationservice:${IMAGE_TAG}
-                                    echo "✅ Successfully pushed recommendationservice:${IMAGE_TAG}"
-                                """
-                            }
-                        }
-                        
-                        stage('shippingservice') {
-                            steps {
-                                sh """
-                                    echo "📤 Pushing shippingservice image..."
-                                    docker push ${DOCKER_REGISTRY}/shippingservice:${IMAGE_TAG}
-                                    echo "✅ Successfully pushed shippingservice:${IMAGE_TAG}"
-                                """
-                            }
-                        }
-                        
-                        stage('shoppingassistantservice') {
-                            steps {
-                                sh """
-                                    echo "📤 Pushing shoppingassistantservice image..."
-                                    docker push ${DOCKER_REGISTRY}/shoppingassistantservice:${IMAGE_TAG}
-                                    echo "✅ Successfully pushed shoppingassistantservice:${IMAGE_TAG}"
-                                """
-                            }
-                        }
-                    }
-                }
-                
                 stage('Verify Signed Images') {
                     steps {
                         withCredentials([
