@@ -301,48 +301,53 @@ pipeline {
                         stage('Snyk - Python Services') {
                             steps {
                                 script {
-                                    def pythonServices = ['emailservice', 'recommendationservice', 'loadgenerator', 'shoppingassistantservice']
-                                    sh """
-                                        echo "🐍 Creating shared virtual environment..."
-                                        python3 -m venv build_venv
-                                        . build_venv/bin/activate
-                                        pip install --upgrade pip setuptools wheel
+                                def pythonServices = ['emailservice', 'recommendationservice', 'loadgenerator', 'shoppingassistantservice']
+                                // حضر المسارات لكل service
+                                def serviceDirs = pythonServices.collect { "src/${it}" }.join(' ')
 
-                                        # Install all requirements together
-                                        for dir in ${pythonServices.collect{"src/" + it}.join(' ')}; do
-                                            if [ -f "$dir/requirements.txt" ]; then
-                                                echo "📦 Installing dependencies for $dir"
-                                                pip install -r "$dir/requirements.txt"
-                                            else
-                                                echo "⏭️ No requirements.txt in $dir"
-                                            fi
-                                        done
+                                sh """
+                                    echo "🐍 Creating shared virtual environment..."
+                                    python3 -m venv build_venv
+                                    source build_venv/bin/activate
 
-                                        # Loop over services to run snyk test + snyk monitor
-                                        for service in ${pythonServices.join(' ')}; do
-                                            service_dir="src/\$service"
-                                            if [ -f "\$service_dir/requirements.txt" ]; then
-                                                echo "🔍 Running Snyk test for \$service..."
-                                                snyk test --file="\$service_dir/requirements.txt" --json > snyk-results-\$service.json || SNYK_EXIT=\$?
+                                    pip install --upgrade pip setuptools wheel
 
-                                                if [ -f "snyk-results-\$service.json" ]; then
-                                                    echo "📊 Snyk scan completed for \$service"
-                                                    HIGH_COUNT=\$(jq -r '.vulnerabilities[]? | select(.severity == "high")' snyk-results-\$service.json | wc -l)
-                                                    MEDIUM_COUNT=\$(jq -r '.vulnerabilities[]? | select(.severity == "medium")' snyk-results-\$service.json | wc -l)
-                                                    LOW_COUNT=\$(jq -r '.vulnerabilities[]? | select(.severity == "low")' snyk-results-\$service.json | wc -l)
-                                                    echo "🚨 \$service vulnerabilities - High: \$HIGH_COUNT, Medium: \$MEDIUM_COUNT, Low: \$LOW_COUNT"
-                                                fi
+                                    # Install all requirements together
+                                    for dir in ${serviceDirs}; do
+                                    if [ -f "\$dir/requirements.txt" ]; then
+                                        echo "📦 Installing dependencies for \$dir"
+                                        pip install -r "\$dir/requirements.txt"
+                                    else
+                                        echo "⏭️ No requirements.txt in \$dir"
+                                    fi
+                                    done
 
-                                                echo "📡 Uploading to Snyk monitor for \$service..."
-                                                snyk monitor --file="\$service_dir/requirements.txt" --project-name="${PROJECT_NAME}-\$service" --target-reference="${GIT_COMMIT_SHORT}" || true
-                                            else
-                                                echo "⚠️  No requirements.txt found in \$service_dir, skipping"
-                                            fi
-                                        done
-                                    """
+                                    # Loop over services to run snyk test + snyk monitor
+                                    for service in ${pythonServices.join(' ')}; do
+                                    service_dir="src/\$service"
+                                    if [ -f "\$service_dir/requirements.txt" ]; then
+                                        echo "🔍 Running Snyk test for \$service..."
+                                        snyk test --file="\$service_dir/requirements.txt" --json > snyk-results-\$service.json || SNYK_EXIT=\$?
+
+                                        if [ -f "snyk-results-\$service.json" ]; then
+                                        echo "📊 Snyk scan completed for \$service"
+                                        HIGH_COUNT=\$(jq -r '.vulnerabilities[]? | select(.severity == "high")' snyk-results-\$service.json | wc -l)
+                                        MEDIUM_COUNT=\$(jq -r '.vulnerabilities[]? | select(.severity == "medium")' snyk-results-\$service.json | wc -l)
+                                        LOW_COUNT=\$(jq -r '.vulnerabilities[]? | select(.severity == "low")' snyk-results-\$service.json | wc -l)
+                                        echo "🚨 \$service vulnerabilities - High: \$HIGH_COUNT, Medium: \$MEDIUM_COUNT, Low: \$LOW_COUNT"
+                                        fi
+
+                                        echo "📡 Uploading to Snyk monitor for \$service..."
+                                        snyk monitor --file="\$service_dir/requirements.txt" --project-name="${PROJECT_NAME}-\$service" --target-reference="${GIT_COMMIT_SHORT}" || true
+                                    else
+                                        echo "⚠️  No requirements.txt found in \$service_dir, skipping"
+                                    fi
+                                    done
+                                """
                                 }
                             }
-                        }
+                            }
+
 
                         stage('Snyk - Java Services') {
                             steps {
@@ -374,31 +379,39 @@ pipeline {
                                 dir('src/cartservice') {
                                     sh '''
                                         echo "🔧 Checking for .NET project files..."
-                                        if find . -name "*.csproj" -o -name "*.sln" | grep -q .; then
-                                            echo "🔧 Restoring .NET dependencies..."
-                                            export PATH=$PATH:$HOME/.dotnet:$HOME/.dotnet/tools
-                                            dotnet restore || echo "⚠️ dotnet restore failed"
 
-                                            echo "🔍 Running Snyk vulnerability scan..."
-                                            ../../node_modules/.bin/snyk test --severity-threshold=medium --json > snyk-results-cartservice.json || SNYK_EXIT=$?
-
-                                            if [ -f "snyk-results-cartservice.json" ]; then
-                                                echo "📊 Snyk scan completed"
-                                                HIGH_COUNT=$(jq -r '.vulnerabilities[]? | select(.severity == "high")' snyk-results-cartservice.json | wc -l)
-                                                MEDIUM_COUNT=$(jq -r '.vulnerabilities[]? | select(.severity == "medium")' snyk-results-cartservice.json | wc -l)
-                                                LOW_COUNT=$(jq -r '.vulnerabilities[]? | select(.severity == "low")' snyk-results-cartservice.json | wc -l)
-                                                echo "🚨 cartservice vulnerabilities - High: $HIGH_COUNT, Medium: $MEDIUM_COUNT, Low: $LOW_COUNT"
-                                            fi
-
-                                            echo "📡 Uploading snapshot to Snyk monitor..."
-                                            ../../node_modules/.bin/snyk monitor --project-name="${PROJECT_NAME}-cartservice" --target-reference="${GIT_COMMIT_SHORT}" || true
+                                        # Check if solution or csproj file exists
+                                        if [ -f cartservice.sln ]; then
+                                            MONITOR_FILE="cartservice.sln"
+                                        elif [ -f src/cartservice.csproj ]; then
+                                            MONITOR_FILE="src/cartservice.csproj"
                                         else
-                                            echo "⚠️  No .NET project files found, skipping restore and Snyk scan"
+                                            echo "⚠️ No suitable .sln or .csproj file found for Snyk scan."
+                                            exit 0
                                         fi
+
+                                        echo "🔧 Restoring .NET dependencies..."
+                                        export PATH=$PATH:$HOME/.dotnet:$HOME/.dotnet/tools
+                                        dotnet restore || echo "⚠️ dotnet restore failed"
+
+                                        echo "🔍 Running Snyk vulnerability scan..."
+                                        ../../node_modules/.bin/snyk test --severity-threshold=medium --file="$MONITOR_FILE" --json > snyk-results-cartservice.json || SNYK_EXIT=$?
+
+                                        if [ -f snyk-results-cartservice.json ]; then
+                                            echo "📊 Snyk scan completed"
+                                            HIGH_COUNT=$(jq -r '.vulnerabilities[]? | select(.severity == "high")' snyk-results-cartservice.json | wc -l)
+                                            MEDIUM_COUNT=$(jq -r '.vulnerabilities[]? | select(.severity == "medium")' snyk-results-cartservice.json | wc -l)
+                                            LOW_COUNT=$(jq -r '.vulnerabilities[]? | select(.severity == "low")' snyk-results-cartservice.json | wc -l)
+                                            echo "🚨 cartservice vulnerabilities - High: $HIGH_COUNT, Medium: $MEDIUM_COUNT, Low: $LOW_COUNT"
+                                        fi
+
+                                        echo "📡 Uploading snapshot to Snyk monitor..."
+                                        ../../node_modules/.bin/snyk monitor --file="$MONITOR_FILE" --project-name="${PROJECT_NAME}-cartservice" --target-reference="${GIT_COMMIT_SHORT}" || true
                                     '''
                                 }
                             }
                         }
+
 
                     }
                     post {
@@ -1164,17 +1177,17 @@ pipeline {
                     echo "C# services (1): cartservice" >> final_report.txt
                     echo "" >> final_report.txt
                     echo "=== DOCKER IMAGES SIZE & TAGS ===" >> final_report.txt
-                    for IMAGE in "${IMAGES[@]}"; do
-                        FULL_IMAGE="${DOCKER_REGISTRY}/${IMAGE}:${IMAGE_TAG}"
-                        # خد الحجم (بـ bytes) من docker images
-                        SIZE=$(docker images --format "{{.Size}}" "$FULL_IMAGE" | head -n1)
-                        # لو مفيش حجم (الصورة مش موجودة محلياً مثلاً) اكتب Unknown
-                        if [ -z "$SIZE" ]; then
-                            SIZE="Unknown"
-                        fi
-                        echo "$IMAGE: Tag=${IMAGE_TAG}, Size=${SIZE}" >> final_report.txt
-                    done
-                    echo "" >> final_report.txt
+                        for IMAGE in "${IMAGES[@]}"; do
+                            FULL_IMAGE="${DOCKER_REGISTRY}/${IMAGE}:${IMAGE_TAG}"
+                            # خد الحجم (بـ bytes) من docker images
+                            SIZE=$(docker images --format "{{.Size}}" "$FULL_IMAGE" | head -n1)
+                            # لو مفيش حجم (الصورة مش موجودة محلياً مثلاً) اكتب Unknown
+                            if [ -z "$SIZE" ]; then
+                                SIZE="Unknown"
+                            fi
+                            echo "$IMAGE: Tag=${IMAGE_TAG}, Size=${SIZE}" >> final_report.txt
+                        done
+                        echo "" >> final_report.txt
 
                     # Generate vulnerability summary if Snyk reports exist
                     if ls src/*/snyk-results-*.json 1> /dev/null 2>&1; then
