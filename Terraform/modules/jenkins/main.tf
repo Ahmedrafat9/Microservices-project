@@ -65,7 +65,7 @@ resource "google_compute_instance" "jenkins" {
     subnetwork         = var.subnet
     subnetwork_project = var.project_id
 
-    access_config {} # Add public IP
+    #access_config {} # Add public IP
   }
 
   metadata = {

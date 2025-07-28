@@ -33,24 +33,34 @@ pipeline {
             steps {
                 sh '''
                     echo "🔍 Running TruffleHog secret detection scan..."
-                    ls -lR $(pwd)
-                    docker run --rm -v $(pwd):/pwd trufflesecurity/trufflehog:latest filesystem --json /pwd > trufflehog_report.json || true
-                    
+                    docker run --rm -v "$(pwd)":/src \
+                        trufflesecurity/trufflehog:latest \
+                        git --json --only-verified file:///src > trufflehog-git-verified.json
+                        
                     # Show summary of findings
-                    if [ -f trufflehog_report.json ]; then
+                    if [ -f trufflehog-git-verified.json ]; then
                         echo "📊 TruffleHog scan completed"
-                        SECRETS_COUNT=$(cat trufflehog_report.json | jq '. | length' 2>/dev/null || echo "0")
+                        SECRETS_COUNT=$(jq length trufflehog-git-verified.json 2>/dev/null || echo "0")
                         echo "🚨 Secrets found: $SECRETS_COUNT"
                         
-                        # Show first few lines for quick review
-                        echo "📄 Sample findings:"
-                        head -n 10 trufflehog_report.json || true
+                        if [ "$SECRETS_COUNT" -gt 0 ]; then
+                            echo "⚠️ WARNING: Secrets detected in repository!"
+                            echo "📄 Secret details:"
+                            jq -r '.[] | "🔑 " + .DetectorName + ": " + .SourceMetadata.Data.Git.file + ":" + (.SourceMetadata.Data.Git.line|tostring)' trufflehog-git-verified.json || true
+                        else
+                            echo "✅ No secrets detected - repository is clean!"
+                        fi
+                    else
+                        echo "⚠️ TruffleHog results file not found"
                     fi
                 '''
-                archiveArtifacts artifacts: 'trufflehog_report.json', allowEmptyArchive: true
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'trufflehog-git-verified.json', allowEmptyArchive: true
+                }
             }
         }
-        
         // STAGE 2: SNYK SECURITY ANALYSIS
         stage('Snyk Security Analysis') {
             stages {
@@ -308,7 +318,7 @@ pipeline {
                                 sh """
                                     echo "🐍 Creating shared virtual environment..."
                                     python3 -m venv build_venv
-                                    source build_venv/bin/activate
+                                    . build_venv/bin/activate
 
                                     pip install --upgrade pip setuptools wheel
 
@@ -379,38 +389,73 @@ pipeline {
                                 dir('src/cartservice') {
                                     sh '''
                                         echo "🔧 Checking for .NET project files..."
-
-                                        # Check if solution or csproj file exists
-                                        if [ -f cartservice.sln ]; then
-                                            MONITOR_FILE="cartservice.sln"
-                                        elif [ -f src/cartservice.csproj ]; then
-                                            MONITOR_FILE="src/cartservice.csproj"
-                                        else
-                                            echo "⚠️ No suitable .sln or .csproj file found for Snyk scan."
+                                        
+                                        # Check if project files exist
+                                        if [ ! -f "src/cartservice.csproj" ]; then
+                                            echo "⚠️ Main project file not found: src/cartservice.csproj"
                                             exit 0
                                         fi
-
-                                        echo "🔧 Restoring .NET dependencies..."
+                        
+                                        echo "🔧 Restoring dependencies..."
                                         export PATH=$PATH:$HOME/.dotnet:$HOME/.dotnet/tools
-                                        dotnet restore || echo "⚠️ dotnet restore failed"
-
-                                        echo "🔍 Running Snyk vulnerability scan..."
-                                        ../../node_modules/.bin/snyk test --severity-threshold=medium --file="$MONITOR_FILE" --json > snyk-results-cartservice.json || SNYK_EXIT=$?
-
-                                        if [ -f snyk-results-cartservice.json ]; then
-                                            echo "📊 Snyk scan completed"
-                                            HIGH_COUNT=$(jq -r '.vulnerabilities[]? | select(.severity == "high")' snyk-results-cartservice.json | wc -l)
-                                            MEDIUM_COUNT=$(jq -r '.vulnerabilities[]? | select(.severity == "medium")' snyk-results-cartservice.json | wc -l)
-                                            LOW_COUNT=$(jq -r '.vulnerabilities[]? | select(.severity == "low")' snyk-results-cartservice.json | wc -l)
-                                            echo "🚨 cartservice vulnerabilities - High: $HIGH_COUNT, Medium: $MEDIUM_COUNT, Low: $LOW_COUNT"
+                                        
+                                        # Restore main project
+                                        dotnet restore src/cartservice.csproj || echo "⚠️ Main project restore failed"
+                                        
+                                        # Restore test project if it exists
+                                        if [ -f "tests/cartservice.tests.csproj" ]; then
+                                            dotnet restore tests/cartservice.tests.csproj || echo "⚠️ Test project restore failed"
                                         fi
-
-                                        echo "📡 Uploading snapshot to Snyk monitor..."
-                                        ../../node_modules/.bin/snyk monitor --file="$MONITOR_FILE" --project-name="${PROJECT_NAME}-cartservice" --target-reference="${GIT_COMMIT_SHORT}" || true
+                        
+                                        echo "🔍 Running Snyk scan on main project..."
+                                        # Change to src directory and run Snyk without --file parameter
+                                        cd src
+                                        ../../../node_modules/.bin/snyk test --severity-threshold=medium --json > ../snyk-results-cartservice.json || true
+                                        cd ..
+                        
+                                        if [ -f snyk-results-cartservice.json ]; then
+                                            HIGH_COUNT=$(jq -r '[.vulnerabilities[]? | select(.severity == "high")] | length' snyk-results-cartservice.json 2>/dev/null || echo "0")
+                                            MEDIUM_COUNT=$(jq -r '[.vulnerabilities[]? | select(.severity == "medium")] | length' snyk-results-cartservice.json 2>/dev/null || echo "0")
+                                            LOW_COUNT=$(jq -r '[.vulnerabilities[]? | select(.severity == "low")] | length' snyk-results-cartservice.json 2>/dev/null || echo "0")
+                                            echo "🚨 Main Project Vulnerabilities - High: $HIGH_COUNT, Medium: $MEDIUM_COUNT, Low: $LOW_COUNT"
+                                        fi
+                        
+                                        # Scan test project if it exists
+                                        if [ -f "tests/cartservice.tests.csproj" ]; then
+                                            echo "🔍 Running Snyk scan on test project..."
+                                            cd tests
+                                            ../../../node_modules/.bin/snyk test --severity-threshold=medium --json > ../snyk-results-cartservice-tests.json || true
+                                            cd ..
+                                            
+                                            if [ -f snyk-results-cartservice-tests.json ]; then
+                                                TEST_HIGH=$(jq -r '[.vulnerabilities[]? | select(.severity == "high")] | length' snyk-results-cartservice-tests.json 2>/dev/null || echo "0")
+                                                TEST_MEDIUM=$(jq -r '[.vulnerabilities[]? | select(.severity == "medium")] | length' snyk-results-cartservice-tests.json 2>/dev/null || echo "0")
+                                                TEST_LOW=$(jq -r '[.vulnerabilities[]? | select(.severity == "low")] | length' snyk-results-cartservice-tests.json 2>/dev/null || echo "0")
+                                                echo "🚨 Test Project Vulnerabilities - High: $TEST_HIGH, Medium: $TEST_MEDIUM, Low: $TEST_LOW"
+                                            fi
+                                        fi
+                        
+                                        echo "📡 Uploading to Snyk monitor..."
+                                        
+                                        # Monitor main project - run from src directory
+                                        cd src
+                                        ../../../node_modules/.bin/snyk monitor --project-name="${PROJECT_NAME}-cartservice" --target-reference="${GIT_COMMIT_SHORT}" || echo "⚠️ Main project monitor failed"
+                                        cd ..
+                                        
+                                        # Monitor test project if it exists
+                                        if [ -f "tests/cartservice.tests.csproj" ]; then
+                                            cd tests
+                                            ../../../node_modules/.bin/snyk monitor --project-name="${PROJECT_NAME}-cartservice-tests" --target-reference="${GIT_COMMIT_SHORT}" || echo "⚠️ Test project monitor failed"
+                                            cd ..
+                                        fi
+                                        
+                                        echo "✅ Cart service monitoring complete"
                                     '''
                                 }
                             }
                         }
+
+
 
 
                     }
