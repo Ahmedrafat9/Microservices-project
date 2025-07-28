@@ -71,15 +71,3 @@ terraform apply
 ```bash
 terraform destroy
 ```
-
----
-
-## 📄 License
-MIT (or your organization license)
-
----
-
-Need help with CI/CD pipeline integration (e.g. GitHub Actions, Jenkins)? Let me know!
-# IAC
-# IAC
-# IAC
