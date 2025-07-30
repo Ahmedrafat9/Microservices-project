@@ -1,0 +1,570 @@
+terraform scan results:
+
+Passed checks: 115, Failed checks: 0, Skipped checks: 1
+
+Check: CKV_GCP_61: "Enable VPC Flow Logs and Intranode Visibility"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/enable-vpc-flow-logs-and-intranode-visibility
+Check: CKV_GCP_69: "Ensure the GKE Metadata Server is Enabled"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-the-gke-metadata-server-is-enabled
+Check: CKV_GCP_72: "Ensure Integrity Monitoring for Shielded GKE Nodes is Enabled"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-integrity-monitoring-for-shielded-gke-nodes-is-enabled
+Check: CKV_GCP_66: "Ensure use of Binary Authorization"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-use-of-binary-authorization
+Check: CKV_GCP_23: "Ensure Kubernetes Cluster is created with Alias IP ranges enabled"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-15
+Check: CKV_GCP_12: "Ensure Network Policy is enabled on Kubernetes Engine Clusters"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-7
+Check: CKV_GCP_21: "Ensure Kubernetes Clusters are configured with Labels"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-13
+Check: CKV_GCP_70: "Ensure the GKE Release Channel is set"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-the-gke-release-channel-is-set
+Check: CKV_GCP_25: "Ensure Kubernetes Cluster is created with Private cluster enabled"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-6
+Check: CKV_GCP_20: "Ensure master authorized networks is set to enabled in GKE clusters"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-12
+Check: CKV_GCP_123: "GKE Don't Use NodePools in the Cluster configuration"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-google-cloud-123
+Check: CKV_GCP_8: "Ensure Stackdriver Monitoring is set to Enabled on Kubernetes Engine Clusters"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-3
+Check: CKV_GCP_1: "Ensure Stackdriver Logging is set to Enabled on Kubernetes Engine Clusters"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-1
+Check: CKV_GCP_68: "Ensure Secure Boot for Shielded GKE Nodes is Enabled"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-secure-boot-for-shielded-gke-nodes-is-enabled
+Check: CKV_GCP_13: "Ensure client certificate authentication to Kubernetes Engine Clusters is disabled"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-8
+Check: CKV_GCP_18: "Ensure GKE Control Plane is not public"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-10
+Check: CKV_GCP_64: "Ensure clusters are created with Private Nodes"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-clusters-are-created-with-private-nodes
+Check: CKV_GCP_7: "Ensure Legacy Authorization is set to Disabled on Kubernetes Engine Clusters"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-2
+Check: CKV_GCP_71: "Ensure Shielded GKE Nodes are Enabled"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-shielded-gke-nodes-are-enabled
+Check: CKV_GCP_69: "Ensure the GKE Metadata Server is Enabled"
+	PASSED for resource: module.gke.google_container_node_pool.primary_nodes
+	File: /modules/gke/main.tf:83-123
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-the-gke-metadata-server-is-enabled
+Check: CKV_GCP_72: "Ensure Integrity Monitoring for Shielded GKE Nodes is Enabled"
+	PASSED for resource: module.gke.google_container_node_pool.primary_nodes
+	File: /modules/gke/main.tf:83-123
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-integrity-monitoring-for-shielded-gke-nodes-is-enabled
+Check: CKV_GCP_10: "Ensure 'Automatic node upgrade' is enabled for Kubernetes Clusters"
+	PASSED for resource: module.gke.google_container_node_pool.primary_nodes
+	File: /modules/gke/main.tf:83-123
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-5
+Check: CKV_GCP_9: "Ensure 'Automatic node repair' is enabled for Kubernetes Clusters"
+	PASSED for resource: module.gke.google_container_node_pool.primary_nodes
+	File: /modules/gke/main.tf:83-123
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-kubernetes-4
+Check: CKV_GCP_68: "Ensure Secure Boot for Shielded GKE Nodes is Enabled"
+	PASSED for resource: module.gke.google_container_node_pool.primary_nodes
+	File: /modules/gke/main.tf:83-123
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/ensure-secure-boot-for-shielded-gke-nodes-is-enabled
+Check: CKV_GCP_37: "Ensure VM disks for critical VMs are encrypted with Customer Supplied Encryption Keys (CSEK)"
+	PASSED for resource: module.jenkins.google_compute_disk.jenkins_disk
+	File: /modules/jenkins/main.tf:12-29
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/bc-gcp-general-x
+Check: CKV_GCP_117: "Ensure basic roles are not used at project level."
+	PASSED for resource: module.jenkins.google_project_iam_member.jenkins_compute_admin
+	File: /modules/jenkins/main.tf:39-43
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-google-cloud-117
+Check: CKV_GCP_42: "Ensure that Service Account has no Admin privileges"
+	PASSED for resource: module.jenkins.google_project_iam_member.jenkins_compute_admin
+	File: /modules/jenkins/main.tf:39-43
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-4
+Check: CKV_GCP_41: "Ensure that IAM users are not assigned the Service Account User or Service Account Token Creator roles at project level"
+	PASSED for resource: module.jenkins.google_project_iam_member.jenkins_compute_admin
+	File: /modules/jenkins/main.tf:39-43
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-3
+Check: CKV_GCP_46: "Ensure Default Service account is not used at a project level"
+	PASSED for resource: module.jenkins.google_project_iam_member.jenkins_compute_admin
+	File: /modules/jenkins/main.tf:39-43
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-7
+Check: CKV_GCP_49: "Ensure roles do not impersonate or manage Service Accounts used at project level"
+	PASSED for resource: module.jenkins.google_project_iam_member.jenkins_compute_admin
+	File: /modules/jenkins/main.tf:39-43
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-10
+Check: CKV_GCP_117: "Ensure basic roles are not used at project level."
+	PASSED for resource: module.jenkins.google_project_iam_member.jenkins_storage_admin
+	File: /modules/jenkins/main.tf:45-49
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-google-cloud-117
+Check: CKV_GCP_42: "Ensure that Service Account has no Admin privileges"
+	PASSED for resource: module.jenkins.google_project_iam_member.jenkins_storage_admin
+	File: /modules/jenkins/main.tf:45-49
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-4
+Check: CKV_GCP_41: "Ensure that IAM users are not assigned the Service Account User or Service Account Token Creator roles at project level"
+	PASSED for resource: module.jenkins.google_project_iam_member.jenkins_storage_admin
+	File: /modules/jenkins/main.tf:45-49
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-3
+Check: CKV_GCP_46: "Ensure Default Service account is not used at a project level"
+	PASSED for resource: module.jenkins.google_project_iam_member.jenkins_storage_admin
+	File: /modules/jenkins/main.tf:45-49
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-7
+Check: CKV_GCP_49: "Ensure roles do not impersonate or manage Service Accounts used at project level"
+	PASSED for resource: module.jenkins.google_project_iam_member.jenkins_storage_admin
+	File: /modules/jenkins/main.tf:45-49
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-10
+Check: CKV_GCP_40: "Ensure that Compute instances do not have public IP addresses"
+	PASSED for resource: module.jenkins.google_compute_instance.jenkins
+	File: /modules/jenkins/main.tf:52-102
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-public-policies/bc-gcp-public-2
+Check: CKV_GCP_32: "Ensure 'Block Project-wide SSH keys' is enabled for VM instances"
+	PASSED for resource: module.jenkins.google_compute_instance.jenkins
+	File: /modules/jenkins/main.tf:52-102
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-8
+Check: CKV_GCP_34: "Ensure that no instance in the project overrides the project setting for enabling OSLogin(OSLogin needs to be enabled in project metadata for all instances)"
+	PASSED for resource: module.jenkins.google_compute_instance.jenkins
+	File: /modules/jenkins/main.tf:52-102
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-10
+Check: CKV_GCP_39: "Ensure Compute instances are launched with Shielded VM enabled"
+	PASSED for resource: module.jenkins.google_compute_instance.jenkins
+	File: /modules/jenkins/main.tf:52-102
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/bc-gcp-general-y
+Check: CKV_GCP_31: "Ensure that instances are not configured to use the default service account with full access to all Cloud APIs"
+	PASSED for resource: module.jenkins.google_compute_instance.jenkins
+	File: /modules/jenkins/main.tf:52-102
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-2
+Check: CKV_GCP_36: "Ensure that IP forwarding is not enabled on Instances"
+	PASSED for resource: module.jenkins.google_compute_instance.jenkins
+	File: /modules/jenkins/main.tf:52-102
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-12
+Check: CKV_GCP_35: "Ensure 'Enable connecting to serial ports' is not enabled for VM Instance"
+	PASSED for resource: module.jenkins.google_compute_instance.jenkins
+	File: /modules/jenkins/main.tf:52-102
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-11
+Check: CKV_GCP_30: "Ensure that instances are not configured to use the default service account"
+	PASSED for resource: module.jenkins.google_compute_instance.jenkins
+	File: /modules/jenkins/main.tf:52-102
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/bc-gcp-iam-1
+Check: CKV_GCP_38: "Ensure VM disks for critical VMs are encrypted with Customer Supplied Encryption Keys (CSEK)"
+	PASSED for resource: module.jenkins.google_compute_instance.jenkins
+	File: /modules/jenkins/main.tf:52-102
+	Calling File: /main.tf:140-154
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/encrypt-boot-disks-for-instances-with-cseks
+Check: CKV_GCP_3: "Ensure Google compute firewall ingress does not allow unrestricted rdp access"
+	PASSED for resource: module.network.google_compute_firewall.allow_internal
+	File: /modules/network/firewall.tf:12-34
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-2
+Check: CKV_GCP_75: "Ensure Google compute firewall ingress does not allow unrestricted FTP access"
+	PASSED for resource: module.network.google_compute_firewall.allow_internal
+	File: /modules/network/firewall.tf:12-34
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-ftp-access
+Check: CKV_GCP_106: "Ensure Google compute firewall ingress does not allow unrestricted http port 80 access"
+	PASSED for resource: module.network.google_compute_firewall.allow_internal
+	File: /modules/network/firewall.tf:12-34
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-http-port-80-access
+Check: CKV_GCP_77: "Ensure Google compute firewall ingress does not allow on ftp port"
+	PASSED for resource: module.network.google_compute_firewall.allow_internal
+	File: /modules/network/firewall.tf:12-34
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-ftp-port-20-access
+Check: CKV_GCP_88: "Ensure Google compute firewall ingress does not allow unrestricted mysql access"
+	PASSED for resource: module.network.google_compute_firewall.allow_internal
+	File: /modules/network/firewall.tf:12-34
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-compute-firewall-ingress-does-not-allow-unrestricted-mysql-access
+Check: CKV_GCP_2: "Ensure Google compute firewall ingress does not allow unrestricted ssh access"
+	PASSED for resource: module.network.google_compute_firewall.allow_internal
+	File: /modules/network/firewall.tf:12-34
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-1
+Check: CKV_GCP_3: "Ensure Google compute firewall ingress does not allow unrestricted rdp access"
+	PASSED for resource: module.network.google_compute_firewall.allow_health_checks
+	File: /modules/network/firewall.tf:36-49
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-2
+Check: CKV_GCP_75: "Ensure Google compute firewall ingress does not allow unrestricted FTP access"
+	PASSED for resource: module.network.google_compute_firewall.allow_health_checks
+	File: /modules/network/firewall.tf:36-49
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-ftp-access
+Check: CKV_GCP_106: "Ensure Google compute firewall ingress does not allow unrestricted http port 80 access"
+	PASSED for resource: module.network.google_compute_firewall.allow_health_checks
+	File: /modules/network/firewall.tf:36-49
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-http-port-80-access
+Check: CKV_GCP_77: "Ensure Google compute firewall ingress does not allow on ftp port"
+	PASSED for resource: module.network.google_compute_firewall.allow_health_checks
+	File: /modules/network/firewall.tf:36-49
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-ftp-port-20-access
+Check: CKV_GCP_88: "Ensure Google compute firewall ingress does not allow unrestricted mysql access"
+	PASSED for resource: module.network.google_compute_firewall.allow_health_checks
+	File: /modules/network/firewall.tf:36-49
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-compute-firewall-ingress-does-not-allow-unrestricted-mysql-access
+Check: CKV_GCP_2: "Ensure Google compute firewall ingress does not allow unrestricted ssh access"
+	PASSED for resource: module.network.google_compute_firewall.allow_health_checks
+	File: /modules/network/firewall.tf:36-49
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-1
+Check: CKV_GCP_3: "Ensure Google compute firewall ingress does not allow unrestricted rdp access"
+	PASSED for resource: module.network.google_compute_firewall.allow_ssh
+	File: /modules/network/firewall.tf:51-64
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-2
+Check: CKV_GCP_75: "Ensure Google compute firewall ingress does not allow unrestricted FTP access"
+	PASSED for resource: module.network.google_compute_firewall.allow_ssh
+	File: /modules/network/firewall.tf:51-64
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-ftp-access
+Check: CKV_GCP_106: "Ensure Google compute firewall ingress does not allow unrestricted http port 80 access"
+	PASSED for resource: module.network.google_compute_firewall.allow_ssh
+	File: /modules/network/firewall.tf:51-64
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-http-port-80-access
+Check: CKV_GCP_77: "Ensure Google compute firewall ingress does not allow on ftp port"
+	PASSED for resource: module.network.google_compute_firewall.allow_ssh
+	File: /modules/network/firewall.tf:51-64
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-ftp-port-20-access
+Check: CKV_GCP_88: "Ensure Google compute firewall ingress does not allow unrestricted mysql access"
+	PASSED for resource: module.network.google_compute_firewall.allow_ssh
+	File: /modules/network/firewall.tf:51-64
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-compute-firewall-ingress-does-not-allow-unrestricted-mysql-access
+Check: CKV_GCP_2: "Ensure Google compute firewall ingress does not allow unrestricted ssh access"
+	PASSED for resource: module.network.google_compute_firewall.allow_ssh
+	File: /modules/network/firewall.tf:51-64
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-1
+Check: CKV_GCP_3: "Ensure Google compute firewall ingress does not allow unrestricted rdp access"
+	PASSED for resource: module.network.google_compute_firewall.allow_https
+	File: /modules/network/firewall.tf:65-77
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-2
+Check: CKV_GCP_75: "Ensure Google compute firewall ingress does not allow unrestricted FTP access"
+	PASSED for resource: module.network.google_compute_firewall.allow_https
+	File: /modules/network/firewall.tf:65-77
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-ftp-access
+Check: CKV_GCP_106: "Ensure Google compute firewall ingress does not allow unrestricted http port 80 access"
+	PASSED for resource: module.network.google_compute_firewall.allow_https
+	File: /modules/network/firewall.tf:65-77
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-http-port-80-access
+Check: CKV_GCP_77: "Ensure Google compute firewall ingress does not allow on ftp port"
+	PASSED for resource: module.network.google_compute_firewall.allow_https
+	File: /modules/network/firewall.tf:65-77
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-ftp-port-20-access
+Check: CKV_GCP_88: "Ensure Google compute firewall ingress does not allow unrestricted mysql access"
+	PASSED for resource: module.network.google_compute_firewall.allow_https
+	File: /modules/network/firewall.tf:65-77
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-compute-firewall-ingress-does-not-allow-unrestricted-mysql-access
+Check: CKV_GCP_2: "Ensure Google compute firewall ingress does not allow unrestricted ssh access"
+	PASSED for resource: module.network.google_compute_firewall.allow_https
+	File: /modules/network/firewall.tf:65-77
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-1
+Check: CKV_GCP_3: "Ensure Google compute firewall ingress does not allow unrestricted rdp access"
+	PASSED for resource: module.network.google_compute_firewall.allow_redis
+	File: /modules/network/firewall.tf:78-91
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-2
+Check: CKV_GCP_75: "Ensure Google compute firewall ingress does not allow unrestricted FTP access"
+	PASSED for resource: module.network.google_compute_firewall.allow_redis
+	File: /modules/network/firewall.tf:78-91
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-ftp-access
+Check: CKV_GCP_106: "Ensure Google compute firewall ingress does not allow unrestricted http port 80 access"
+	PASSED for resource: module.network.google_compute_firewall.allow_redis
+	File: /modules/network/firewall.tf:78-91
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-http-port-80-access
+Check: CKV_GCP_77: "Ensure Google compute firewall ingress does not allow on ftp port"
+	PASSED for resource: module.network.google_compute_firewall.allow_redis
+	File: /modules/network/firewall.tf:78-91
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-ftp-port-20-access
+Check: CKV_GCP_88: "Ensure Google compute firewall ingress does not allow unrestricted mysql access"
+	PASSED for resource: module.network.google_compute_firewall.allow_redis
+	File: /modules/network/firewall.tf:78-91
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-compute-firewall-ingress-does-not-allow-unrestricted-mysql-access
+Check: CKV_GCP_2: "Ensure Google compute firewall ingress does not allow unrestricted ssh access"
+	PASSED for resource: module.network.google_compute_firewall.allow_redis
+	File: /modules/network/firewall.tf:78-91
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-1
+Check: CKV_GCP_3: "Ensure Google compute firewall ingress does not allow unrestricted rdp access"
+	PASSED for resource: module.network.google_compute_firewall.allow_jenkins
+	File: /modules/network/firewall.tf:92-103
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-2
+Check: CKV_GCP_75: "Ensure Google compute firewall ingress does not allow unrestricted FTP access"
+	PASSED for resource: module.network.google_compute_firewall.allow_jenkins
+	File: /modules/network/firewall.tf:92-103
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-ftp-access
+Check: CKV_GCP_106: "Ensure Google compute firewall ingress does not allow unrestricted http port 80 access"
+	PASSED for resource: module.network.google_compute_firewall.allow_jenkins
+	File: /modules/network/firewall.tf:92-103
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-http-port-80-access
+Check: CKV_GCP_77: "Ensure Google compute firewall ingress does not allow on ftp port"
+	PASSED for resource: module.network.google_compute_firewall.allow_jenkins
+	File: /modules/network/firewall.tf:92-103
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-ftp-port-20-access
+Check: CKV_GCP_88: "Ensure Google compute firewall ingress does not allow unrestricted mysql access"
+	PASSED for resource: module.network.google_compute_firewall.allow_jenkins
+	File: /modules/network/firewall.tf:92-103
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-compute-firewall-ingress-does-not-allow-unrestricted-mysql-access
+Check: CKV_GCP_2: "Ensure Google compute firewall ingress does not allow unrestricted ssh access"
+	PASSED for resource: module.network.google_compute_firewall.allow_jenkins
+	File: /modules/network/firewall.tf:92-103
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-1
+Check: CKV_GCP_26: "Ensure that VPC Flow Logs is enabled for every subnet in a VPC Network"
+	PASSED for resource: module.network.google_compute_subnetwork.subnet
+	File: /modules/network/main.tf:7-32
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-gcp-logging-1
+Check: CKV_GCP_74: "Ensure that private_ip_google_access is enabled for Subnet"
+	PASSED for resource: module.network.google_compute_subnetwork.subnet
+	File: /modules/network/main.tf:7-32
+	Calling File: /main.tf:52-62
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/ensure-gcp-subnet-has-a-private-ip-google-access
+Check: CKV_GCP_95: "Ensure Memorystore for Redis has AUTH enabled"
+	PASSED for resource: module.redis.google_redis_instance.redis
+	File: /modules/redis/main.tf:1-26
+	Calling File: /main.tf:128-137
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/ensure-gcp-memorystore-for-redis-is-auth-enabled
+Check: CKV_GCP_97: "Ensure Memorystore for Redis uses intransit encryption"
+	PASSED for resource: module.redis.google_redis_instance.redis
+	File: /modules/redis/main.tf:1-26
+	Calling File: /main.tf:128-137
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/ensure-gcp-memorystore-for-redis-uses-intransit-encryption
+Check: CKV_GCP_51: "Ensure PostgreSQL database 'log_checkpoints' flag is set to 'on'"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-2
+Check: CKV_GCP_111: "Ensure GCP PostgreSQL logs SQL statements"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-google-cloud-111
+Check: CKV_GCP_6: "Ensure all Cloud SQL database instance requires all incoming connections to use SSL"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/bc-gcp-general-1
+Check: CKV_GCP_53: "Ensure PostgreSQL database 'log_disconnections' flag is set to 'on'"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-4
+Check: CKV_GCP_11: "Ensure that Cloud SQL database Instances are not open to the world"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-networking-4
+Check: CKV_GCP_57: "Ensure PostgreSQL database 'log_min_duration_statement' flag is set to '-1'"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-8
+Check: CKV_GCP_109: "Ensure the GCP PostgreSQL database log levels are set to ERROR or lower"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-google-cloud-109
+Check: CKV_GCP_79: "Ensure SQL database is using latest Major version"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/ensure-gcp-sql-database-uses-the-latest-major-version
+Check: CKV_GCP_54: "Ensure PostgreSQL database 'log_lock_waits' flag is set to 'on'"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-5
+Check: CKV_GCP_14: "Ensure all Cloud SQL database instance have backup configuration enabled"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-general-policies/bc-gcp-general-2
+Check: CKV_GCP_108: "Ensure hostnames are logged for GCP PostgreSQL databases"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-google-cloud-108
+Check: CKV_GCP_52: "Ensure PostgreSQL database 'log_connections' flag is set to 'on'"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-3
+Check: CKV_GCP_60: "Ensure Cloud SQL database does not have public IP"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-11
+Check: CKV_GCP_55: "Ensure PostgreSQL database 'log_min_messages' flag is set to a valid value"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-6
+Check: CKV_GCP_110: "Ensure pgAudit is enabled for your GCP PostgreSQL database"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-google-cloud-110
+Check: CKV_GCP_56: "Ensure PostgreSQL database 'log_temp_files flag is set to '0'"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Calling File: /main.tf:108-125
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/cloud-sql-policies/bc-gcp-sql-7
+Check: CKV2_GCP_18: "Ensure GCP network defines a firewall and does not use the default firewall"
+	PASSED for resource: module.network.google_compute_network.vpc
+	File: /modules/network/main.tf:1-5
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/bc-gcp-2-18
+Check: CKV2_GCP_19: "Ensure GCP Kubernetes engine clusters have 'alpha cluster' feature disabled"
+	PASSED for resource: module.gke.google_container_cluster.gke
+	File: /modules/gke/main.tf:1-81
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/bc-gcp-2-19
+Check: CKV2_GCP_12: "Ensure GCP compute firewall ingress does not allow unrestricted access to all ports"
+	PASSED for resource: module.network.google_compute_firewall.allow_internal
+	File: /modules/network/firewall.tf:12-34
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-access-to-all-ports
+Check: CKV2_GCP_12: "Ensure GCP compute firewall ingress does not allow unrestricted access to all ports"
+	PASSED for resource: module.network.google_compute_firewall.allow_health_checks
+	File: /modules/network/firewall.tf:36-49
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-access-to-all-ports
+Check: CKV2_GCP_12: "Ensure GCP compute firewall ingress does not allow unrestricted access to all ports"
+	PASSED for resource: module.network.google_compute_firewall.allow_ssh
+	File: /modules/network/firewall.tf:51-64
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-access-to-all-ports
+Check: CKV2_GCP_12: "Ensure GCP compute firewall ingress does not allow unrestricted access to all ports"
+	PASSED for resource: module.network.google_compute_firewall.allow_https
+	File: /modules/network/firewall.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-access-to-all-ports
+Check: CKV2_GCP_12: "Ensure GCP compute firewall ingress does not allow unrestricted access to all ports"
+	PASSED for resource: module.network.google_compute_firewall.allow_redis
+	File: /modules/network/firewall.tf:78-91
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-access-to-all-ports
+Check: CKV2_GCP_12: "Ensure GCP compute firewall ingress does not allow unrestricted access to all ports"
+	PASSED for resource: module.network.google_compute_firewall.allow_jenkins
+	File: /modules/network/firewall.tf:92-103
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-networking-policies/ensure-gcp-google-compute-firewall-ingress-does-not-allow-unrestricted-access-to-all-ports
+Check: CKV2_GCP_13: "Ensure PostgreSQL database flag 'log_duration' is set to 'on'"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-gcp-2-13
+Check: CKV2_GCP_20: "Ensure MySQL DB instance has point-in-time recovery backup configured"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-storage-gcs-policies/bc-gcp-2-20
+Check: CKV2_GCP_7: "Ensure that a MySQL database instance does not allow anyone to connect with administrative privileges"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-iam-policies/ensure-that-a-mysql-database-instance-does-not-allow-anyone-to-connect-with-administrative-privileges
+Check: CKV2_GCP_16: "Ensure PostgreSQL database flag 'log_planner_stats' is set to 'off'"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-gcp-2-16
+Check: CKV2_GCP_14: "Ensure PostgreSQL database flag 'log_executor_stats' is set to 'off'"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-gcp-2-14
+Check: CKV2_GCP_15: "Ensure PostgreSQL database flag 'log_parser_stats' is set to 'off'"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-gcp-2-15
+Check: CKV2_GCP_17: "Ensure PostgreSQL database flag 'log_statement_stats' is set to 'off'"
+	PASSED for resource: module.cloudsql.google_sql_database_instance.postgres
+	File: /modules/sql/main.tf:23-175
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/logging-policies-1/bc-gcp-2-17
+Check: CKV_GCP_65: "Manage Kubernetes RBAC users with Google Groups for GKE"
+	SKIPPED for resource: module.gke.google_container_cluster.gke
+	Suppress comment: No comment provided
+	File: /modules/gke/main.tf:1-81
+	Calling File: /main.tf:65-77
+	Guide: https://docs.prismacloud.io/en/enterprise-edition/policy-reference/google-cloud-policies/google-cloud-kubernetes-policies/manage-kubernetes-rbac-users-with-google-groups-for-gke
