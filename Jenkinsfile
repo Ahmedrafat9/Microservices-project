@@ -1165,10 +1165,10 @@ pipeline {
                             sh """
                             sed -i 's|image: ahmedrafat/${service}:.*|image: ahmedrafat/${service}:${IMAGE_TAG}|' Microservices-project/kubernetes-manifests/${service}.yaml
                             """
-                        }
+                            }
                         }
                     }
-                    }
+                }
 
                     stage('Commit and Push Changes') {
                     steps {
@@ -1179,14 +1179,14 @@ pipeline {
                         git commit -m "Update Docker images to tag ${IMAGE_TAG}"
                         git push origin main
                         '''
-                    }
+                            }
+                        }
                     }
                 }
-                }
 
 
 
-            }
+            
         }
         
         // CLEANUP STAGE
