@@ -312,51 +312,40 @@ pipeline {
                             steps {
                                 script {
                                 def pythonServices = ['emailservice', 'recommendationservice', 'loadgenerator', 'shoppingassistantservice']
-                                // حضر المسارات لكل service
-                                def serviceDirs = pythonServices.collect { "src/${it}" }.join(' ')
-
-                                sh """
-                                    echo "🐍 Creating shared virtual environment..."
-                                    python3 -m venv build_venv
-                                    . build_venv/bin/activate
-
-                                    pip install --upgrade pip setuptools wheel
-
-                                    # Install all requirements together
-                                    for dir in ${serviceDirs}; do
-                                    if [ -f "\$dir/requirements.txt" ]; then
-                                        echo "📦 Installing dependencies for \$dir"
-                                        pip install -r "\$dir/requirements.txt"
-                                    else
-                                        echo "⏭️ No requirements.txt in \$dir"
-                                    fi
-                                    done
-
-                                    # Loop over services to run snyk test + snyk monitor
-                                    for service in ${pythonServices.join(' ')}; do
-                                    service_dir="src/\$service"
-                                    if [ -f "\$service_dir/requirements.txt" ]; then
-                                        echo "🔍 Running Snyk test for \$service..."
-                                        snyk test --file="\$service_dir/requirements.txt" --json > snyk-results-\$service.json || SNYK_EXIT=\$?
-
-                                        if [ -f "snyk-results-\$service.json" ]; then
-                                        echo "📊 Snyk scan completed for \$service"
-                                        HIGH_COUNT=\$(jq -r '.vulnerabilities[]? | select(.severity == "high")' snyk-results-\$service.json | wc -l)
-                                        MEDIUM_COUNT=\$(jq -r '.vulnerabilities[]? | select(.severity == "medium")' snyk-results-\$service.json | wc -l)
-                                        LOW_COUNT=\$(jq -r '.vulnerabilities[]? | select(.severity == "low")' snyk-results-\$service.json | wc -l)
-                                        echo "🚨 \$service vulnerabilities - High: \$HIGH_COUNT, Medium: \$MEDIUM_COUNT, Low: \$LOW_COUNT"
+                                for (service in pythonServices) {
+                                    dir("src/${service}") {
+                                    sh """
+                                        echo "🐍 Setting up virtual environment for ${service}..."
+                                        python3 -m venv venv
+                                        . venv/bin/activate
+                                        
+                                        if [ -f requirements.txt ]; then
+                                        echo "📦 Installing dependencies for ${service}"
+                                        pip install --upgrade pip setuptools wheel
+                                        pip install -r requirements.txt
+                                        
+                                        echo "🔍 Running Snyk test for ${service}..."
+                                        snyk test --file=requirements.txt --json > snyk-results-${service}.json || true
+                                        
+                                        if [ -f snyk-results-${service}.json ]; then
+                                            HIGH_COUNT=\$(jq -r '.vulnerabilities[]? | select(.severity == "high")' snyk-results-${service}.json | wc -l)
+                                            MEDIUM_COUNT=\$(jq -r '.vulnerabilities[]? | select(.severity == "medium")' snyk-results-${service}.json | wc -l)
+                                            LOW_COUNT=\$(jq -r '.vulnerabilities[]? | select(.severity == "low")' snyk-results-${service}.json | wc -l)
+                                            echo "🚨 ${service} vulnerabilities - High: \$HIGH_COUNT, Medium: \$MEDIUM_COUNT, Low: \$LOW_COUNT"
                                         fi
-
-                                        echo "📡 Uploading to Snyk monitor for \$service..."
-                                        snyk monitor --file="\$service_dir/requirements.txt" --project-name="${PROJECT_NAME}-\$service" --target-reference="${GIT_COMMIT_SHORT}" || true
-                                    else
-                                        echo "⚠️  No requirements.txt found in \$service_dir, skipping"
-                                    fi
-                                    done
-                                """
+                                        
+                                        echo "📡 Uploading to Snyk monitor for ${service}..."
+                                        snyk monitor --file=requirements.txt --project-name="${PROJECT_NAME}-${service}" --target-reference="${GIT_COMMIT_SHORT}" || true
+                                        else
+                                        echo "⚠️  No requirements.txt found, skipping Snyk scan for ${service}"
+                                        fi
+                                    """
+                                    }
+                                }
                                 }
                             }
                             }
+
 
 
                         stage('Snyk - Java Services') {
@@ -1170,8 +1159,7 @@ pipeline {
                 stage('Update Kubernetes Manifests with Image Tags') {
                     steps {
                         script {
-                            def MANIFEST_DIR = "/microservices-demo/kubernetes-manifests"
-                            def IMAGE_TAG = env.IMAGE_TAG ?: "${env.BUILD_NUMBER}"  // خليه ياخد IMAGE_TAG من env أو BUILD_NUMBER كبديل
+                            def MANIFEST_DIR = "Ahmedrafat9/Microservices-project/kubernetes-manifests"
                             
                             def SERVICES = [
                                 "adservice",
@@ -1201,6 +1189,7 @@ pipeline {
                         }
                     }
                 }
+
 
             }
         }
@@ -1258,13 +1247,20 @@ pipeline {
                     echo "=== DOCKER IMAGES SIZE & TAGS ===" >> final_report.txt
                     for IMAGE in "${IMAGES[@]}"; do
                         FULL_IMAGE="${DOCKER_REGISTRY}/${IMAGE}:${IMAGE_TAG}"
-                        SIZE=$(docker images --format "{{.Size}}" "$FULL_IMAGE" | head -n1)
+                        
+                        # تحقق إذا الصورة موجودة محلياً
+                        SIZE=$(docker image inspect --format='{{.Size}}' "$FULL_IMAGE" 2>/dev/null || echo "")
+                        
                         if [ -z "$SIZE" ]; then
                             SIZE="Unknown"
+                        else
+                            SIZE=$(echo "$SIZE" | awk '{print int($1/1024/1024)"MB"}')
                         fi
+                        
                         echo "$IMAGE: Tag=${IMAGE_TAG}, Size=${SIZE}" >> final_report.txt
                     done
                     echo "" >> final_report.txt
+
 
                     if ls src/*/snyk-results-*.json 1> /dev/null 2>&1; then
                         echo "=== VULNERABILITY SUMMARY ===" >> final_report.txt
