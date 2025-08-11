@@ -1166,18 +1166,29 @@ pipeline {
         
         
 
-        stage('Update Docker Image Tags') {
-            steps {
-                script {
-                def services = ['adservice', 'cartservice', 'shippingservice', 'frontend', 'emailservice', 'checkoutservice', 'currencyservice', 'paymentservice', 'productcatalogservice', 'recommendationservice', 'loadgenerator', 'shoppingassistantservice']
-                for (service in services) {
+    stage('Update Docker Image Tags') {
+        steps {
+            script {
+                def services = ['adservice', 'cartservice', 'checkoutservice', 'emailservice', 'loadgenerator', 'productcatalogservice', 'shippingservice']
+                def basePath = "Microservices-project/kubernetes-manifests"
+                
+                services.each { service ->
+                    def manifestFile = "${basePath}/${service}.yaml"
                     sh """
-                    sed -i 's|image: ahmedrafat/${service}:.*|image: ahmedrafat/${service}:${IMAGE_TAG}|' Microservices-project/kubernetes-manifests/${service}.yaml
+                        echo "Checking manifest: ${manifestFile}"
+                        if [ -f "${manifestFile}" ]; then
+                            echo "Found ${manifestFile}, updating image tag..."
+                            # Replace the line with image: <service>:... or image: ahmedrafat/<service>:... to new tag
+                            sed -i -E "s|image: (ahmedrafat/)?${service}:.*|image: ahmedrafat/${service}:${IMAGE_TAG}|" ${manifestFile}
+                            echo "Updated ${manifestFile}"
+                        else
+                            echo "Warning: ${manifestFile} not found!"
+                        fi
                     """
-                }
                 }
             }
         }
+    }
 
         stage('Commit and Push Changes') {
             steps {
