@@ -9,7 +9,9 @@ pipeline {
         PROJECT_NAME = 'microservices-project'
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
         GIT_COMMIT_SHORT = "${env.GIT_COMMIT?.take(7) ?: 'unknown'}"
-        
+        GIT_TOKEN = credentials('github-token')  // هنا تحط الـ ID بتاع ال-Credential في Jenkins
+        REPO_URL = "https://${GIT_TOKEN}@github.com/Ahmedrafat9/Microservices-project.git"
+    
         // GCP KMS Configuration for Cosign
         GCP_PROJECT = "task-464917"
         KEY_LOCATION = "global"
@@ -25,7 +27,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // هنا بيتم جلب الكود من Git
-                checkout scm
+                git branch: 'main', url: "${REPO_URL}"
             }
         }
         // STAGE 1: TRUFFLEHOG SECRET DETECTION
@@ -36,14 +38,13 @@ pipeline {
                     docker run --rm -v "$(pwd)":/src \
                         trufflesecurity/trufflehog:latest \
                         git --json --only-verified file:///src > trufflehog-git-verified.json
-                        
-                    # Show summary of findings
-                    if [ -f trufflehog-git-verified.json ]; then
+
+                    if [ -s trufflehog-git-verified.json ]; then
                         echo "📊 TruffleHog scan completed"
-                        SECRETS_COUNT=$(jq length trufflehog-git-verified.json 2>/dev/null || echo "0")
+                        SECRETS_COUNT=$(jq 'if type=="array" then length else 0 end' trufflehog-git-verified.json 2>/dev/null || echo "0")
                         echo "🚨 Secrets found: $SECRETS_COUNT"
-                        
-                        if [ "$SECRETS_COUNT" -gt 0 ]; then
+
+                        if [ -n "$SECRETS_COUNT" ] && [ "$SECRETS_COUNT" -gt 0 ]; then
                             echo "⚠️ WARNING: Secrets detected in repository!"
                             echo "📄 Secret details:"
                             jq -r '.[] | "🔑 " + .DetectorName + ": " + .SourceMetadata.Data.Git.file + ":" + (.SourceMetadata.Data.Git.line|tostring)' trufflehog-git-verified.json || true
@@ -51,7 +52,7 @@ pipeline {
                             echo "✅ No secrets detected - repository is clean!"
                         fi
                     else
-                        echo "⚠️ TruffleHog results file not found"
+                        echo "⚠️ TruffleHog results file not found or empty"
                     fi
                 '''
             }
@@ -1156,39 +1157,33 @@ pipeline {
                         }
                     }
                 }
-                stage('Update Kubernetes Manifests with Image Tags') {
+                stage('Update Docker Image Tags') {
                     steps {
                         script {
-                            def MANIFEST_DIR = "Ahmedrafat9/Microservices-project/kubernetes-manifests"
-                            
-                            def SERVICES = [
-                                "adservice",
-                                "checkoutservice",
-                                "emailservice",
-                                "loadgenerator",
-                                "productcatalogservice",
-                                "shippingservice",
-                                "cartservice",
-                                "currencyservice",
-                                "frontend",
-                                "paymentservice",
-                                "recommendationservice"
-                            ]
-
-                            SERVICES.each { svc ->
-                                def filePath = "${MANIFEST_DIR}/${svc}.yaml"
-                                sh """
-                                    if [ -f "${filePath}" ]; then
-                                        echo "Updating image for ${svc} in ${filePath}"
-                                        sed -i "s|image:.*${svc}:.*|image: ahmedrafat/${svc}:${IMAGE_TAG}|" ${filePath}
-                                    else
-                                        echo "Warning: ${filePath} not found!"
-                                    fi
-                                """
-                            }
+                        def services = ['adservice', 'cartservice', 'shippingservice', 'frontend', 'emailservice', 'checkoutservice', 'currencyservice', 'paymentservice', 'productcatalogservice', 'recommendationservice', 'loadgenerator', 'shoppingassistantservice']
+                        for (service in services) {
+                            sh """
+                            sed -i 's|image: ahmedrafat/${service}:.*|image: ahmedrafat/${service}:${IMAGE_TAG}|' Microservices-project/kubernetes-manifests/${service}.yaml
+                            """
+                        }
                         }
                     }
+                    }
+
+                    stage('Commit and Push Changes') {
+                    steps {
+                        sh '''
+                        git config user.name "jenkins-bot"
+                        git config user.email "jenkins@example.com"
+                        git add Microservices-project/kubernetes-manifests/*.yaml
+                        git commit -m "Update Docker images to tag ${IMAGE_TAG}"
+                        git push origin main
+                        '''
+                    }
+                    }
                 }
+                }
+
 
 
             }
