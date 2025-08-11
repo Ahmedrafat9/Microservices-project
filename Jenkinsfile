@@ -1157,39 +1157,43 @@ pipeline {
                         }
                     }
                 }
-                stage('Update Docker Image Tags') {
-                    steps {
-                        script {
-                        def services = ['adservice', 'cartservice', 'shippingservice', 'frontend', 'emailservice', 'checkoutservice', 'currencyservice', 'paymentservice', 'productcatalogservice', 'recommendationservice', 'loadgenerator', 'shoppingassistantservice']
-                        for (service in services) {
-                            sh """
-                            sed -i 's|image: ahmedrafat/${service}:.*|image: ahmedrafat/${service}:${IMAGE_TAG}|' Microservices-project/kubernetes-manifests/${service}.yaml
-                            """
-                            }
-                        }
-                    }
-                }
-
-                    stage('Commit and Push Changes') {
-                    steps {
-                        sh '''
-                        git config user.name "jenkins-bot"
-                        git config user.email "jenkins@example.com"
-                        git add Microservices-project/kubernetes-manifests/*.yaml
-                        git commit -m "Update Docker images to tag ${IMAGE_TAG}"
-                        git push origin main
-                        '''
-                            }
-                        }
-                    }
-                }
+                
+        
 
 
-
-            
+            }
         }
         
+        
+
+        stage('Update Docker Image Tags') {
+            steps {
+                script {
+                def services = ['adservice', 'cartservice', 'shippingservice', 'frontend', 'emailservice', 'checkoutservice', 'currencyservice', 'paymentservice', 'productcatalogservice', 'recommendationservice', 'loadgenerator', 'shoppingassistantservice']
+                for (service in services) {
+                    sh """
+                    sed -i 's|image: ahmedrafat/${service}:.*|image: ahmedrafat/${service}:${IMAGE_TAG}|' Microservices-project/kubernetes-manifests/${service}.yaml
+                    """
+                }
+                }
+            }
+        }
+
+        stage('Commit and Push Changes') {
+            steps {
+                sh '''
+                git config user.name "jenkins-bot"
+                git config user.email "jenkins@example.com"
+                git add Microservices-project/kubernetes-manifests/*.yaml
+                git commit -m "Update Docker images to tag ${IMAGE_TAG}"
+                git push origin main
+                '''
+            }
+        }
+               
+
         // CLEANUP STAGE
+        
         stage('Cleanup Images') {
             steps {
                 sh '''
