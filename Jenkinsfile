@@ -4,7 +4,7 @@ pipeline {
     environment {
         GIT_LFS_SKIP_SMUDGE = '1'
         DOCKER_REGISTRY = 'ahmedrafat'
-        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        IMAGE_TAG = "${env.GIT_COMMIT}"
         SNYK_TOKEN = credentials('snyk-token')
         PROJECT_NAME = 'microservices-project'
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
@@ -469,8 +469,7 @@ pipeline {
 
             }
         }
-        
-        stage('Snyk Scan All Projects') {
+        /*stage('Snyk Scan All Projects') {
             steps {
                 script {
                     sh '''
@@ -516,6 +515,7 @@ pipeline {
                 }
             }
         }
+            */
         // STAGE 3: BUILD DOCKER IMAGES
         stage('Build Docker Images') {
             parallel {
@@ -1167,6 +1167,41 @@ pipeline {
                         }
                     }
                 }
+                stage('Update Kubernetes Manifests with Image Tags') {
+                    steps {
+                        script {
+                            def MANIFEST_DIR = "/microservices-demo/kubernetes-manifests"
+                            def IMAGE_TAG = env.IMAGE_TAG ?: "${env.BUILD_NUMBER}"  // خليه ياخد IMAGE_TAG من env أو BUILD_NUMBER كبديل
+                            
+                            def SERVICES = [
+                                "adservice",
+                                "checkoutservice",
+                                "emailservice",
+                                "loadgenerator",
+                                "productcatalogservice",
+                                "shippingservice",
+                                "cartservice",
+                                "currencyservice",
+                                "frontend",
+                                "paymentservice",
+                                "recommendationservice"
+                            ]
+
+                            SERVICES.each { svc ->
+                                def filePath = "${MANIFEST_DIR}/${svc}.yaml"
+                                sh """
+                                    if [ -f "${filePath}" ]; then
+                                        echo "Updating image for ${svc} in ${filePath}"
+                                        sed -i "s|image:.*${svc}:.*|image: ahmedrafat/${svc}:${IMAGE_TAG}|" ${filePath}
+                                    else
+                                        echo "Warning: ${filePath} not found!"
+                                    fi
+                                """
+                            }
+                        }
+                    }
+                }
+
             }
         }
         
@@ -1184,7 +1219,7 @@ pipeline {
     post {
         always {
             script {
-                sh '''
+                sh '''#!/bin/bash
                     echo "=== FINAL PIPELINE SUMMARY ===" > final_report.txt
                     echo "Build: ${BUILD_NUMBER}" >> final_report.txt
                     echo "Date: $(date)" >> final_report.txt
@@ -1204,7 +1239,6 @@ pipeline {
                     echo "=== SECURITY SCANS COMPLETED ===" >> final_report.txt
                     echo "- TruffleHog Secret Detection: $([ -f trufflehog_report.json ] && echo 'COMPLETED' || echo 'FAILED')" >> final_report.txt
                     echo "- Snyk Vulnerability Scan: $(find . -name 'snyk-results-*.json' | wc -l) services scanned" >> final_report.txt
-                    #echo "- Snyk Code Analysis: $(find . -name 'snyk-code-*.json' | wc -l) services scanned" >> final_report.txt
                     echo "- Trivy Container Scan: $(find . -name 'trivy-*-report.json' | wc -l) images scanned" >> final_report.txt
                     echo "" >> final_report.txt
                     
@@ -1222,51 +1256,47 @@ pipeline {
                     echo "C# services (1): cartservice" >> final_report.txt
                     echo "" >> final_report.txt
                     echo "=== DOCKER IMAGES SIZE & TAGS ===" >> final_report.txt
-                        for IMAGE in "${IMAGES[@]}"; do
-                            FULL_IMAGE="${DOCKER_REGISTRY}/${IMAGE}:${IMAGE_TAG}"
-                            # خد الحجم (بـ bytes) من docker images
-                            SIZE=$(docker images --format "{{.Size}}" "$FULL_IMAGE" | head -n1)
-                            # لو مفيش حجم (الصورة مش موجودة محلياً مثلاً) اكتب Unknown
-                            if [ -z "$SIZE" ]; then
-                                SIZE="Unknown"
-                            fi
-                            echo "$IMAGE: Tag=${IMAGE_TAG}, Size=${SIZE}" >> final_report.txt
-                        done
-                        echo "" >> final_report.txt
+                    for IMAGE in "${IMAGES[@]}"; do
+                        FULL_IMAGE="${DOCKER_REGISTRY}/${IMAGE}:${IMAGE_TAG}"
+                        SIZE=$(docker images --format "{{.Size}}" "$FULL_IMAGE" | head -n1)
+                        if [ -z "$SIZE" ]; then
+                            SIZE="Unknown"
+                        fi
+                        echo "$IMAGE: Tag=${IMAGE_TAG}, Size=${SIZE}" >> final_report.txt
+                    done
+                    echo "" >> final_report.txt
 
-                    # Generate vulnerability summary if Snyk reports exist
                     if ls src/*/snyk-results-*.json 1> /dev/null 2>&1; then
                         echo "=== VULNERABILITY SUMMARY ===" >> final_report.txt
                         for file in src/*/snyk-results-*.json; do
                             if [ -f "$file" ]; then
                                 service=$(basename "$file" | sed 's/snyk-results-//g' | sed 's/.json//g')
-                                high=$(cat "$file" | jq -r '.vulnerabilities[]? | select(.severity == "high") | .id' | wc -l 2>/dev/null || echo "0")
-                                medium=$(cat "$file" | jq -r '.vulnerabilities[]? | select(.severity == "medium") | .id' | wc -l 2>/dev/null || echo "0")
-                                low=$(cat "$file" | jq -r '.vulnerabilities[]? | select(.severity == "low") | .id' | wc -l 2>/dev/null || echo "0")
+                                high=$(jq -r '.vulnerabilities[]? | select(.severity == "high") | .id' "$file" | wc -l 2>/dev/null || echo "0")
+                                medium=$(jq -r '.vulnerabilities[]? | select(.severity == "medium") | .id' "$file" | wc -l 2>/dev/null || echo "0")
+                                low=$(jq -r '.vulnerabilities[]? | select(.severity == "low") | .id' "$file" | wc -l 2>/dev/null || echo "0")
                                 echo "$service: High=$high, Medium=$medium, Low=$low" >> final_report.txt
                             fi
                         done
                         echo "" >> final_report.txt
                     fi
                     
-                    # Generate Trivy summary if reports exist
                     if ls trivy-*-report.json 1> /dev/null 2>&1; then
                         echo "=== TRIVY CONTAINER SCAN SUMMARY ===" >> final_report.txt
                         for file in trivy-*-report.json; do
                             if [ -f "$file" ]; then
                                 service=$(basename "$file" | sed 's/trivy-//g' | sed 's/-report.json//g')
-                                critical=$(cat "$file" | jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL") | .VulnerabilityID' | wc -l 2>/dev/null || echo "0")
-                                high=$(cat "$file" | jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH") | .VulnerabilityID' | wc -l 2>/dev/null || echo "0")
-                                medium=$(cat "$file" | jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "MEDIUM") | .VulnerabilityID' | wc -l 2>/dev/null || echo "0")
+                                critical=$(jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL") | .VulnerabilityID' "$file" | wc -l 2>/dev/null || echo "0")
+                                high=$(jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH") | .VulnerabilityID' "$file" | wc -l 2>/dev/null || echo "0")
+                                medium=$(jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "MEDIUM") | .VulnerabilityID' "$file" | wc -l 2>/dev/null || echo "0")
                                 echo "$service: Critical=$critical, High=$high, Medium=$medium" >> final_report.txt
                             fi
                         done
-                        
                     fi
                 '''
                 
                 archiveArtifacts artifacts: 'final_report.txt, trivy-*-report.json, trufflehog_report.json, src/*/snyk-*.json', fingerprint: true, allowEmptyArchive: true
             }
+
             
             cleanWs()
         }
