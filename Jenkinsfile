@@ -1166,39 +1166,115 @@ pipeline {
         
         
 
-    stage('Update Docker Image Tags') {
-        steps {
-            script {
-                def services = ['adservice', 'cartservice', 'checkoutservice', 'emailservice', 'loadgenerator', 'productcatalogservice', 'shippingservice']
-                def basePath = "Microservices-project/kubernetes-manifests"
-                
-                services.each { service ->
-                    def manifestFile = "${basePath}/${service}.yaml"
-                    sh """
-                        echo "Checking manifest: ${manifestFile}"
-                        if [ -f "${manifestFile}" ]; then
-                            echo "Found ${manifestFile}, updating image tag..."
-                            # Replace the line with image: <service>:... or image: ahmedrafat/<service>:... to new tag
-                            sed -i -E "s|image: (ahmedrafat/)?${service}:.*|image: ahmedrafat/${service}:${IMAGE_TAG}|" ${manifestFile}
-                            echo "Updated ${manifestFile}"
-                        else
-                            echo "Warning: ${manifestFile} not found!"
-                        fi
-                    """
+        stage('Update Kubernetes Manifests') {
+                steps {
+                    sh '''
+                        echo "🔄 Updating Kubernetes manifests with new image tags..."
+                        
+                        # List of services to update
+                        SERVICES="adservice cartservice checkoutservice currencyservice emailservice frontend loadgenerator paymentservice productcatalogservice recommendationservice shippingservice"
+                        
+                        for SERVICE in $SERVICES; do
+                            FILE="kubernetes-manifests/${SERVICE}.yaml"
+                            
+                            if [ -f "$FILE" ]; then
+                                echo "📝 Processing $FILE..."
+                                
+                                # Show current content
+                                echo "Before update:"
+                                grep "image:" "$FILE" | head -2
+                                
+                                # Create backup
+                                cp "$FILE" "$FILE.backup"
+                                
+                                # Apply sed transformations
+                                sed -i "s/image: ${SERVICE}$/image: ahmedrafat\\/${SERVICE}:${IMAGE_TAG}/" "$FILE"
+                                sed -i "s/image: ${SERVICE}:.*/image: ahmedrafat\\/${SERVICE}:${IMAGE_TAG}/" "$FILE"
+                                sed -i "s/image: ahmedrafat\\/${SERVICE}:.*/image: ahmedrafat\\/${SERVICE}:${IMAGE_TAG}/" "$FILE"
+                                
+                                # Check if changes were made
+                                if ! diff "$FILE.backup" "$FILE" >/dev/null 2>&1; then
+                                    echo "✅ Updated $FILE"
+                                    echo "After update:"
+                                    grep "image:" "$FILE" | head -2
+                                else
+                                    echo "⚠️ No changes in $FILE"
+                                fi
+                                
+                                rm "$FILE.backup"
+                                echo "---"
+                            else
+                                echo "⚠️ File not found: $FILE"
+                            fi
+                        done
+                        
+                        echo "✅ Manifest update complete"
+                    '''
                 }
             }
-        }
-    }
-
-        stage('Commit and Push Changes') {
+            
+        stage('Commit & Push Updates') {
             steps {
-                sh '''
-                git config user.name "jenkins-bot"
-                git config user.email "jenkins@example.com"
-                git add Microservices-project/kubernetes-manifests/*.yaml
-                git commit -m "Update Docker images to tag ${IMAGE_TAG}"
-                git push origin main
-                '''
+                withCredentials([usernamePassword(credentialsId: 'github-token', 
+                                                    usernameVariable: 'GIT_USERNAME', 
+                                                    passwordVariable: 'GIT_TOKEN')]) {
+                    sh '''
+                        echo "🔧 Setting up Git configuration..."
+                        git config user.name "jenkins-bot"
+                        git config user.email "jenkins@example.com"
+                        
+                        echo "📊 Current Git status:"
+                        git status
+                        
+                        # Add all manifest files
+                        git add kubernetes-manifests/
+                        
+                        echo "📊 Git status after adding files:"
+                        git status
+                        
+                        # Check for staged changes
+                        if [ -n "$(git diff --cached --name-only)" ]; then
+                            echo "💾 Committing changes..."
+                            git commit -m "🚀 Update image tags to build ${BUILD_NUMBER}
+        
+        Updated microservice images to tag: ${BUILD_NUMBER}
+        Jenkins build: ${BUILD_URL}
+        
+        Services updated:
+        - adservice, cartservice, checkoutservice
+        - currencyservice, emailservice, frontend
+        - loadgenerator, paymentservice, productcatalogservice
+        - recommendationservice, shippingservice
+        
+        Auto-generated by Jenkins Pipeline"
+                            
+                            echo "📤 Pushing to GitHub..."
+                            
+                            # Try the push with error handling
+                            if git push https://${GIT_TOKEN}@github.com/Ahmedrafat9/Microservices-project.git main; then
+                                echo "✅ Successfully pushed to GitHub!"
+                            else
+                                echo "❌ Push failed. Attempting with username..."
+                                git push https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Ahmedrafat9/Microservices-project.git main
+                                echo "✅ Successfully pushed to GitHub with username!"
+                            fi
+                        else
+                            echo "ℹ️ No changes to commit"
+                            
+                            # Debug: show current tags
+                            echo "🔍 Current image tags in files:"
+                            if grep "image: ahmedrafat" kubernetes-manifests/*.yaml 2>/dev/null | head -5; then
+                                echo "Found ahmedrafat images"
+                            else
+                                echo "No ahmedrafat images found - checking all images:"
+                                grep "image:" kubernetes-manifests/*.yaml 2>/dev/null | head -5 || echo "No image tags found"
+                            fi
+                        fi
+                        
+                        echo "🔗 Repository: https://github.com/Ahmedrafat9/Microservices-project"
+                        echo "🏷️ Build number: ${BUILD_NUMBER}"
+                    '''
+                }
             }
         }
                
