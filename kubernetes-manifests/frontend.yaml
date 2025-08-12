@@ -44,7 +44,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: frontend
+          image: ahmedrafat/frontend:52
           ports:
           - containerPort: 8080
           readinessProbe:
