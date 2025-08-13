@@ -63,6 +63,15 @@ spec:
             port: 8080
           initialDelaySeconds: 15
           periodSeconds: 10
+          # wait for Redis
+        command: [ "sh", "-c" ]
+        args:
+          - |
+            until nc -z redis-cart 6379; do
+              echo "Waiting for Redis..."
+              sleep 2
+            done
+            ./cartservice start  
         livenessProbe:
           httpGet:
             path: /health
