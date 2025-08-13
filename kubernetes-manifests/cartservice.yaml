@@ -37,7 +37,7 @@ spec:
         effect: "NoSchedule"
       containers:
       - name: server
-        image: ahmedrafat/cartservice:52
+        image: ahmedrafat/cartservice:53
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

@@ -11,8 +11,11 @@ RUN dotnet restore && \
 FROM mcr.microsoft.com/dotnet/aspnet:${NET_VERSION}
 
 # Update and fix critical issues on the distribution
-RUN apt-get update
-RUN apt-get -y dist-upgrade
+RUN apt-get update && apt-get -y dist-upgrade
+# Install netcat
+RUN apt-get update && \
+    apt-get install -y netcat-openbsd && \
+    rm -rf /var/lib/apt/lists/*
 
 ARG GRPC_HEALTH_PROBE_VERSION=v0.4.22
 ADD https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 /bin/grpc_health_probe
