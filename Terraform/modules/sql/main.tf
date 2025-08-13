@@ -15,6 +15,19 @@ resource "google_secret_manager_secret" "db_password_secret" {
     service = "cloudsql"
   }
 }
+resource "google_compute_global_address" "private_ip_address" {
+  name          = "google-managed-services-vpc"
+  purpose       = "VPC_PEERING"
+  network       = var.private_network   # ✅ use input variable
+  project       = var.project_id   # ✅ make sure project is set
+
+  address_type  = "INTERNAL"
+  prefix_length = 16
+  
+}
+
+
+
 
 resource "google_secret_manager_secret_version" "db_password_secret_version" {
   secret      = google_secret_manager_secret.db_password_secret.id

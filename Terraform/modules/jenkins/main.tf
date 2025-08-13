@@ -64,8 +64,9 @@ resource "google_compute_instance" "jenkins" {
   network_interface {
     subnetwork         = var.subnet
     subnetwork_project = var.project_id
-
-    #access_config {} # Add public IP
+    #checkov:skip=CKV_GCP_40 Reason: Jenkins needs a public IP for external access
+    
+    access_config {} # Add public IP
   }
 
   metadata = {

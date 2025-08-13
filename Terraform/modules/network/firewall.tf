@@ -52,7 +52,9 @@ resource "google_compute_firewall" "allow_ssh" {
   project = var.project_id
   name    = "allow-ssh"
   network = var.network_name
-
+  depends_on = [
+    google_compute_network.vpc
+  ]
   allow {
     protocol = "tcp"
     ports    = ["22"]
@@ -89,8 +91,8 @@ resource "google_compute_firewall" "allow_redis" {
   direction     = "INGRESS"
   priority      = 1000
 }
-resource "google_compute_firewall" "allow_jenkins" {
-  name    = "allow-jenkins"
+resource "google_compute_firewall" "allow_jenkins_1" {
+  name    = "allow-jenkins-1"
   network = var.network_name
   project=var.project_id  
   allow {

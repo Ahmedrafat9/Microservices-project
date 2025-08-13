@@ -69,3 +69,17 @@ resource "google_service_networking_connection" "private_vpc_connection" {
   depends_on = [google_compute_global_address.private_ip_range]
 }
 
+resource "google_compute_router" "gke_nat_router" {
+  project = var.project_id
+  name    = "gke-nat-router"
+  network = google_compute_network.vpc.id
+  region  = var.region
+}
+resource "google_compute_router_nat" "gke_nat" {
+  project = var.project_id
+  name                               = "gke-nat"
+  router                             = google_compute_router.gke_nat_router.name
+  region                             = var.region
+  nat_ip_allocate_option             = "AUTO_ONLY" # automatically allocates external IPs
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+}

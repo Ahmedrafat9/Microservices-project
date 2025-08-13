@@ -1,0 +1,8 @@
+# kube-linter.yaml
+checks:
+  container-security:
+    privileged-containers: error
+  pod-liveness-readiness:
+    missing-liveness-probe: error
+    missing-readiness-probe: error
+
