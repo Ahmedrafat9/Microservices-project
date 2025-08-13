@@ -24,6 +24,11 @@ spec:
         runAsGroup: 1000
         runAsNonRoot: true
         runAsUser: 1000
+      tolerations:
+      - key: "sandbox.gke.io/runtime"
+        operator: "Equal"
+        value: "gvisor"
+        effect: "NoSchedule"  
       initContainers:
       - name: frontend-check
         image: busybox:1.36.1               # ✅ specific tag
