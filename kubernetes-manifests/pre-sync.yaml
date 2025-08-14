@@ -40,21 +40,27 @@ spec:
               memory: "256Mi"
               cpu: "200m"
       containers:
-        - name: kube-linter
-          image: ghcr.io/stackrox/kube-linter:v0.6.6
-          command: ["/kube-linter"]
-          args: ["lint", "/app/kubernetes-manifests"]
-          volumeMounts:
-            - name: app
-              mountPath: /app
-          securityContext:
-            readOnlyRootFilesystem: true
-            runAsUser: 1000
-            runAsNonRoot: true
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "200m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
+      - name: kube-linter
+        image: ghcr.io/stackrox/kube-linter:v0.6.6
+        command: ["/kube-linter"]
+        args: ["lint", "/app/kubernetes-manifests"]
+        volumeMounts:
+          - name: app
+            mountPath: /app
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsUser: 1000
+          runAsNonRoot: true
+          privileged: false
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        startupProbe:
+          exec:
+            command: ["ls", "/app"]
+          failureThreshold: 3
+          periodSeconds: 5
