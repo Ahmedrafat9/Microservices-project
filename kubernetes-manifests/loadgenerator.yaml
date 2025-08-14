@@ -84,7 +84,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: hmedrafat/loadgenerator:52
+        image: ahmedrafat/loadgenerator:52
         env:
         - name: FRONTEND_ADDR
           value: "frontend:80"
