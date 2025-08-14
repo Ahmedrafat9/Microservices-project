@@ -35,7 +35,8 @@ spec:
         - name: kube-linter
           image: ghcr.io/stackrox/kube-linter:v0.6.6
           command: ["/kube-linter"]
-          args: ["lint", "/app/kubernetes-manifests"]
+          args: ["lint", "/app/microservices-demo/kubernetes-manifests"]
+
           volumeMounts:
             - name: app
               mountPath: /app
