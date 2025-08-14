@@ -16,11 +16,11 @@ spec:
           operator: "Equal"
           value: "gvisor"
           effect: "NoSchedule"
-      # Use emptyDir to avoid GitRepo plugin issues
+      # EmptyDir for sharing files between initContainer and main container
       volumes:
         - name: app
           emptyDir: {}
-      # InitContainer clones your Git repo
+      # InitContainer clones the Git repo
       initContainers:
         - name: git-clone
           image: alpine/git
@@ -30,16 +30,12 @@ spec:
           volumeMounts:
             - name: app
               mountPath: /app
-      # KubeLinter runs on cloned manifests
+      # KubeLinter container
       containers:
         - name: kube-linter
           image: ghcr.io/stackrox/kube-linter:v0.6.6
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              echo "🚀 Running KubeLinter..."
-              kube-linter lint /app/kubernetes-manifests \
-              || { echo "❌ Linting failed! Fix issues before deploying."; exit 1; }
+          command: ["/kube-linter"]
+          args: ["lint", "/app/kubernetes-manifests"]
           volumeMounts:
             - name: app
               mountPath: /app
