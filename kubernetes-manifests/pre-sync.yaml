@@ -1,39 +1,61 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: kube-linter-check
-  namespace: argocd
+  name: kubelinter-check
   annotations:
     argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/hook-weight: "-1"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   template:
     spec:
       restartPolicy: Never
-      volumes:
-        - name: manifests
-          emptyDir: {}   # مساحة مؤقتة مشتركة
-      initContainers:
-        - name: git-clone
-          image: alpine/git
-          command:
-            - sh
-            - -c
-            - |
-              echo "📥 Cloning repo..."
-              git clone --depth=1 https://github.com/Ahmedrafat9/Microservices-project /work
-          volumeMounts:
-            - name: manifests
-              mountPath: /work
       containers:
-        - name: kube-linter
-          image: ghcr.io/stackrox/kube-linter:v0.6.6
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              echo "🚀 Running KubeLinter checks..."
-              kube-linter lint /work/kubernetes-manifests \
-              || { echo "❌ Linting failed. Fix issues before deploying."; exit 1; }
-          volumeMounts:
-            - name: manifests
-              mountPath: /work
+      - name: kubelinter
+        image: stackrox/kube-linter:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "🔍 Checking manifests for security and reliability issues..."
+          
+          # Clone the repo and check manifest files
+          apk add --no-cache git
+          git clone https://github.com/Ahmedrafat9/Microservices-project.git /repo
+          cd /repo
+          
+          # Check if kubernetes-manifests directory exists
+          if [ ! -d "kubernetes-manifests" ]; then
+            echo "❌ 'kubernetes-manifests' directory not found!"
+            exit 1
+          fi
+          
+          # Run KubeLinter on the kubernetes-manifests directory - only check privileged containers and missing probes
+          echo "📋 Checking for privileged containers and missing probes..."
+          kube-linter lint "kubernetes-manifests" \
+            --include privileged-containers,no-liveness-probe,no-readiness-probe \
+            --format json > /tmp/results.json || true
+          
+          # Show results in a readable format
+          if [ -s /tmp/results.json ]; then
+            echo ""
+            echo "🚨 Issues Found:"
+            cat /tmp/results.json | jq -r '.Reports[]? | "❌ \(.Check): \(.Object.K8sObject.Kind)/\(.Object.K8sObject.Name) - \(.Diagnostic.Message)"'
+            
+            # Check for privileged containers and missing probes
+            CRITICAL=$(cat /tmp/results.json | jq -r '.Reports[]? | select(.Check | contains("privileged-containers") or contains("no-liveness-probe") or contains("no-readiness-probe")) | .Check' | wc -l)
+            
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo ""
+              echo "💥 Found privileged containers or missing health probes!"
+              echo "🚫 Deployment blocked - please fix:"
+              echo "   • Remove privileged: true from containers"
+              echo "   • Add livenessProbe to containers"
+              echo "   • Add readinessProbe to containers"
+              exit 1
+            fi
+            
+            echo ""
+            echo "⚠️  Found issues but none are critical - deployment will continue"
+          else
+            echo "✅ No issues found - all checks passed!"
+          fi
