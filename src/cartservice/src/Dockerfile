@@ -1,49 +1,41 @@
-ARG NET_VERSION=9.0
-FROM mcr.microsoft.com/dotnet/sdk:${NET_VERSION} as builder
+# Copyright 2021 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
+# https://mcr.microsoft.com/product/dotnet/sdk
+FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:9.0.101-noble AS builder
+ARG TARGETARCH
 WORKDIR /app
+COPY cartservice.csproj ./
+RUN dotnet restore cartservice.csproj 
 COPY . .
-RUN dotnet restore && \
-    dotnet build && \
-    dotnet publish -c release -r linux-x64 --no-self-contained -o /cartservice
+RUN dotnet publish cartservice.csproj \
+    -c Release \
+    -r linux-x64 \
+    --self-contained true \
+    -p:PublishSingleFile=true \
+    -p:PublishTrimmed=true \
+    -p:TrimMode=full \
+    -o /cartservice
 
-# cartservice
-FROM mcr.microsoft.com/dotnet/aspnet:${NET_VERSION}
 
-# Update and fix critical issues on the distribution
-RUN apt-get update && apt-get -y dist-upgrade
-# Install netcat
-RUN apt-get update && \
-    apt-get install -y netcat-openbsd && \
-    rm -rf /var/lib/apt/lists/*
-
-ARG GRPC_HEALTH_PROBE_VERSION=v0.4.22
-ADD https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 /bin/grpc_health_probe
-RUN chmod +x /bin/grpc_health_probe
+# https://mcr.microsoft.com/product/dotnet/runtime-deps
+FROM mcr.microsoft.com/dotnet/runtime-deps:9.0.1-noble-chiseled@sha256:6f7466eda39e24efaf7eab2325e15d776a685d13cc93b4ea0cde9ee4f7982210
 
 WORKDIR /app
 COPY --from=builder /cartservice .
-#COPY --from=builder /app/start .
-
-# Add the Splunk Distribution of OpenTelemetry .NET
-RUN apt-get update && \
-    apt-get install -y \
-            curl \
-            unzip
-
-ARG SPLUNK_OTEL_VERSION=1.10.0
-ENV OTEL_DOTNET_AUTO_HOME=/.splunk-otel-dotnet
-ADD https://github.com/signalfx/splunk-otel-dotnet/releases/download/v${SPLUNK_OTEL_VERSION}/splunk-otel-dotnet-install.sh ./
-RUN chmod +x ./splunk-otel-dotnet-install.sh && \
-    ./splunk-otel-dotnet-install.sh && \
-    rm ./splunk-otel-dotnet-install.sh
-
-ENV CORECLR_ENABLE_PROFILING=1
-ENV CORECLR_PROFILER={918728DD-259F-4A6A-AC2B-B85E1B658318}
-ENV CORECLR_PROFILER_PATH=/.splunk-otel-dotnet/linux-x64/OpenTelemetry.AutoInstrumentation.Native.so
-ENV DOTNET_ADDITIONAL_DEPS=/.splunk-otel-dotnet/AdditionalDeps
-ENV DOTNET_SHARED_STORE=/.splunk-otel-dotnet/store
-ENV DOTNET_STARTUP_HOOKS=/.splunk-otel-dotnet/net/OpenTelemetry.AutoInstrumentation.StartupHook.dll
-ENV OTEL_DOTNET_AUTO_PLUGINS="Splunk.OpenTelemetry.AutoInstrumentation.Plugin, Splunk.OpenTelemetry.AutoInstrumentation"
-
-ENTRYPOINT ["./cartservice", "start"]
+EXPOSE 7070
+ENV DOTNET_EnableDiagnostics=0 \
+    ASPNETCORE_HTTP_PORTS=7070
+USER 1000
+ENTRYPOINT ["/app/cartservice"]
