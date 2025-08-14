@@ -10,18 +10,26 @@ spec:
   template:
     spec:
       restartPolicy: Never
+      initContainers:
+      - name: git-clone
+        image: alpine/git:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "📥 Cloning repository..."
+          git clone https://github.com/Ahmedrafat9/Microservices-project.git /workspace/repo
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
       containers:
       - name: kubelinter
         image: stackrox/kube-linter:latest
         command: ["/bin/sh", "-c"]
         args:
         - |
-          echo "🔍 Checking manifests for security and reliability issues..."
+          echo "🔍 Checking manifests for privileged containers and missing probes..."
           
-          # Clone the repo and check manifest files
-          apk add --no-cache git
-          git clone https://github.com/Ahmedrafat9/Microservices-project.git /repo
-          cd /repo
+          cd /workspace/repo
           
           # Check if kubernetes-manifests directory exists
           if [ ! -d "kubernetes-manifests" ]; then
@@ -59,3 +67,9 @@ spec:
           else
             echo "✅ No issues found - all checks passed!"
           fi
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+      volumes:
+      - name: workspace
+        emptyDir: {}
