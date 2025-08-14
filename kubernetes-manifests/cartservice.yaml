@@ -112,6 +112,11 @@ spec:
         runAsGroup: 1000
         runAsNonRoot: true
         runAsUser: 1000
+        tolerations:
+        - key: "sandbox.gke.io/runtime"
+          operator: "Equal"
+          value: "gvisor"
+          effect: "NoSchedule" 
       containers:
       - name: redis
         securityContext:
@@ -132,11 +137,7 @@ spec:
           periodSeconds: 5
           tcpSocket:
             port: 6379
-        tolerations:
-        - key: "sandbox.gke.io/runtime"
-          operator: "Equal"
-          value: "gvisor"
-          effect: "NoSchedule"     
+            
         volumeMounts:
         - mountPath: /data
           name: redis-data
