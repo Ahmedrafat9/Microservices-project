@@ -1,3 +1,4 @@
+# Simple KubeLinter Pre-Sync Hook for ArgoCD
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -18,8 +19,9 @@ spec:
         - |
           echo "📥 Cloning repository..."
           git clone https://github.com/Ahmedrafat9/Microservices-project.git /workspace/repo
+          echo "✅ Repository cloned successfully"
         volumeMounts:
-        - name: workspace
+        - name: shared-workspace
           mountPath: /workspace
       containers:
       - name: kubelinter
@@ -27,7 +29,7 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
         - |
-          echo "🔍 Checking manifests for privileged containers and missing probes..."
+          echo "🔍 Checking for privileged containers and missing probes..."
           
           cd /workspace/repo
           
@@ -37,13 +39,13 @@ spec:
             exit 1
           fi
           
-          # Run KubeLinter on the kubernetes-manifests directory - only check privileged containers and missing probes
+          # Run KubeLinter - only check privileged containers and missing probes
           echo "📋 Checking for privileged containers and missing probes..."
           kube-linter lint "kubernetes-manifests" \
             --include privileged-containers,no-liveness-probe,no-readiness-probe \
             --format json > /tmp/results.json || true
           
-          # Show results in a readable format
+          # Show results
           if [ -s /tmp/results.json ]; then
             echo ""
             echo "🚨 Issues Found:"
@@ -61,15 +63,39 @@ spec:
               echo "   • Add readinessProbe to containers"
               exit 1
             fi
-            
-            echo ""
-            echo "⚠️  Found issues but none are critical - deployment will continue"
           else
             echo "✅ No issues found - all checks passed!"
           fi
         volumeMounts:
-        - name: workspace
+        - name: shared-workspace
           mountPath: /workspace
       volumes:
-      - name: workspace
+      - name: shared-workspace
         emptyDir: {}
+---
+# ServiceAccount with minimal permissions
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubelinter-hook
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kubelinter-hook
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["create", "get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kubelinter-hook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubelinter-hook
+subjects:
+- kind: ServiceAccount
+  name: kubelinter-hook
