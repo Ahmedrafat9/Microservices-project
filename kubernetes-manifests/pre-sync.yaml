@@ -7,37 +7,54 @@ metadata:
     argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
+  ttlSecondsAfterFinished: 60
   template:
     spec:
       restartPolicy: Never
-      # Allow scheduling on gVisor nodes
       tolerations:
         - key: "sandbox.gke.io/runtime"
           operator: "Equal"
           value: "gvisor"
           effect: "NoSchedule"
-      # EmptyDir for sharing files between initContainer and main container
       volumes:
         - name: app
           emptyDir: {}
-      # InitContainer clones the Git repo
       initContainers:
         - name: git-clone
-          image: alpine/git
+          image: alpine/git:2.40.1
           command: ["sh", "-c"]
           args:
             - git clone --depth 1 https://github.com/Ahmedrafat9/Microservices-project /app
           volumeMounts:
             - name: app
               mountPath: /app
-      # KubeLinter container
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsUser: 1000
+            runAsNonRoot: true
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
       containers:
         - name: kube-linter
           image: ghcr.io/stackrox/kube-linter:v0.6.6
           command: ["/kube-linter"]
-          args:
-            - lint
-            - /app/kubernetes-manifests
+          args: ["lint", "/app/kubernetes-manifests"]
           volumeMounts:
             - name: app
               mountPath: /app
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsUser: 1000
+            runAsNonRoot: true
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
