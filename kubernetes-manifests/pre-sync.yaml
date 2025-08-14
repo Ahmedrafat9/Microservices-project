@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kube-linter-check
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: kube-linter
+          image: ghcr.io/stackrox/kube-linter:v0.6.6
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "Running KubeLinter checks..."
+              kube-linter lint /work \
+              || { echo "❌ Linting failed. Fix issues before deploying."; exit 1; }
+          volumeMounts:
+            - name: manifests
+              mountPath: /work
+      volumes:
+        - name: manifests
+          gitRepo:
+            repository: "https://github.com/Ahmedrafat9/Microservices-project/tree/main/kubernetes-manifests"
+            revision: main
