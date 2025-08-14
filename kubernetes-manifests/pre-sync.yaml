@@ -12,7 +12,7 @@ spec:
       restartPolicy: Never
       volumes:
         - name: manifests
-          emptyDir: {}   # مساحة مؤقتة يشاركها init + container
+          emptyDir: {}   # مساحة مؤقتة مشتركة
       initContainers:
         - name: git-clone
           image: alpine/git
@@ -20,6 +20,7 @@ spec:
             - sh
             - -c
             - |
+              echo "📥 Cloning repo..."
               git clone --depth=1 https://github.com/Ahmedrafat9/Microservices-project /work
           volumeMounts:
             - name: manifests
