@@ -10,26 +10,33 @@ spec:
   template:
     spec:
       restartPolicy: Never
+      # Schedule on a standard (non-gVisor) node pool
       nodeSelector:
         cloud.google.com/gke-nodepool: standard-node-pool
+      # Use emptyDir instead of GitRepo
       volumes:
         - name: app
           emptyDir: {}
+      # InitContainer clones the Git repo
       initContainers:
         - name: git-clone
           image: alpine/git
           command: ["sh", "-c"]
-          args: ["git clone --depth 1 https://github.com/Ahmedrafat9/Microservices-project /app"]
+          args:
+            - git clone --depth 1 https://github.com/Ahmedrafat9/Microservices-project /app
           volumeMounts:
             - name: app
               mountPath: /app
+      # KubeLinter container runs on the cloned manifests
       containers:
         - name: kube-linter
           image: ghcr.io/stackrox/kube-linter:v0.6.6
           command: ["/bin/sh", "-c"]
           args:
-            - kube-linter lint /app/kubernetes-manifests || { echo "Lint failed"; exit 1; }
+            - |
+              echo "🚀 Running KubeLinter..."
+              kube-linter lint /app/kubernetes-manifests \
+              || { echo "❌ Linting failed! Fix issues before deploying."; exit 1; }
           volumeMounts:
             - name: app
               mountPath: /app
-
