@@ -1,57 +1,86 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: tekton.dev/v1beta1
+kind: Task
 metadata:
-  name: kubelinter-check
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-weight: "-1"
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  name: kube-linter
+  namespace: ci
 spec:
-  backoffLimit: 1
-  template:
-    spec:
-      restartPolicy: Never
-      containers:
-      - name: kubelinter
-        image: alpine:latest
-        command: ["/bin/sh", "-c"]
-        args:
-        - |
-          # Install dependencies
-          apk add --no-cache git curl jq
-          
-          # Download kube-linter
-          wget -O /tmp/kube-linter.tar.gz https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux.tar.gz
-          tar -xzf /tmp/kube-linter.tar.gz -C /tmp/
-          mv /tmp/kube-linter /usr/local/bin/
-          chmod +x /usr/local/bin/kube-linter
-          
-          echo "📥 Cloning repository..."
-          git clone https://github.com/Ahmedrafat9/Microservices-project.git /tmp/repo
-          cd /tmp/repo
-          
-          echo "🔍 Checking kubernetes-manifests directory..."
-          if [ ! -d "kubernetes-manifests" ]; then
-            echo "❌ kubernetes-manifests directory not found!"
-            exit 1
-          fi
-          
-          echo "📋 Running KubeLinter checks..."
-          kube-linter lint kubernetes-manifests \
-            --include privileged-containers,no-liveness-probe,no-readiness-probe \
-            --format json > /tmp/results.json || true
-          
-          # Check results
-          if [ -s /tmp/results.json ] && [ "$(cat /tmp/results.json | jq '.Reports | length')" -gt 0 ]; then
-            echo ""
-            echo "🚨 Issues found:"
-            cat /tmp/results.json | jq -r '.Reports[] | "❌ \(.Check): \(.Object.K8sObject.Kind)/\(.Object.K8sObject.Name)"'
-            echo ""
-            echo "💥 Deployment blocked! Fix these issues:"
-            echo "   • Remove 'privileged: true' from containers"
-            echo "   • Add livenessProbe to containers"
-            echo "   • Add readinessProbe to containers"
-            exit 1
-          fi
-          
-          echo "✅ All checks passed!"
+  description: Task to run KubeLinter on Kubernetes manifests
+  params:
+    - name: informLintingOnly
+      type: string
+      default: "false"
+    - name: linterImage
+      type: string
+      default: "ghcr.io/stackrox/kube-linter:v0.6.6"
+    - name: repoURL
+      type: string
+      default: "https://github.com/Ahmedrafat9/Microservices-project"
+    - name: revision
+      type: string
+      default: "main"
+  workspaces:
+    - name: repository
+  steps:
+    - name: git-clone
+      image: alpine/git
+      script: |
+        #!/bin/sh
+        echo "📥 Cloning repo..."
+        git clone --depth 1 $(params.repoURL) /workspace/repository
+        cd /workspace/repository
+        git checkout $(params.revision)
+    - name: kube-linter
+      image: $(params.linterImage)
+      workingDir: /workspace/repository
+      script: |
+        #!/bin/sh
+        echo "🚀 Running KubeLinter..."
+        kube-linter lint /workspace/repository/kubernetes-manifests \
+          || { echo "❌ Linting failed!"; [ "$(params.informLintingOnly)" = "true" ] && exit 0 || exit 1; }
+
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: kube-linter-pipeline
+  namespace: ci
+spec:
+  workspaces:
+    - name: repository
+  params:
+    - name: informLintingOnly
+      type: string
+      default: "false"
+  tasks:
+    - name: run-linter
+      taskRef:
+        name: kube-linter
+      workspaces:
+        - name: repository
+          workspace: repository
+      params:
+        - name: informLintingOnly
+          value: "$(params.informLintingOnly)"
+
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: kube-linter-run
+  namespace: defualt
+spec:
+  pipelineRef:
+    name: kube-linter-pipeline
+  workspaces:
+    - name: repository
+      volumeClaimTemplate:
+        metadata:
+          name: repo-pvc
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
+  params:
+    - name: informLintingOnly
+      value: "false"
