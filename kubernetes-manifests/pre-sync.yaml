@@ -10,14 +10,17 @@ spec:
   template:
     spec:
       restartPolicy: Never
-      # Schedule on a standard (non-gVisor) node pool
-      nodeSelector:
-        cloud.google.com/gke-nodepool: standard-node-pool
-      # Use emptyDir instead of GitRepo
+      # Allow scheduling on gVisor nodes
+      tolerations:
+        - key: "sandbox.gke.io/runtime"
+          operator: "Equal"
+          value: "gvisor"
+          effect: "NoSchedule"
+      # Use emptyDir to avoid GitRepo plugin issues
       volumes:
         - name: app
           emptyDir: {}
-      # InitContainer clones the Git repo
+      # InitContainer clones your Git repo
       initContainers:
         - name: git-clone
           image: alpine/git
@@ -27,7 +30,7 @@ spec:
           volumeMounts:
             - name: app
               mountPath: /app
-      # KubeLinter container runs on the cloned manifests
+      # KubeLinter runs on cloned manifests
       containers:
         - name: kube-linter
           image: ghcr.io/stackrox/kube-linter:v0.6.6
