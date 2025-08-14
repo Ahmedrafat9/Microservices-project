@@ -10,27 +10,24 @@ spec:
   template:
     spec:
       restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-nodepool: standard-node-pool
       initContainers:
         - name: git-clone
           image: alpine/git
           command:
             - sh
             - -c
-            - |
-              echo "📥 Cloning repo..."
-              git clone --depth 1 https://github.com/Ahmedrafat9/Microservices-project /app
+            - git clone --depth 1 https://github.com/Ahmedrafat9/Microservices-project /app
       containers:
         - name: kube-linter
           image: ghcr.io/stackrox/kube-linter:v0.6.6
           command: ["/bin/sh", "-c"]
           args:
             - |
-              echo "🚀 Running KubeLinter on your manifests..."
+              echo "🚀 Running KubeLinter..."
               kube-linter lint /app/kubernetes-manifests \
               || { echo "❌ Linting failed! Fix issues before deploying."; exit 1; }
-          volumeMounts:
-            - name: app
-              mountPath: /app
       volumes:
         - name: app
           emptyDir: {}
