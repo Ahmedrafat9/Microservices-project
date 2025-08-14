@@ -10,6 +10,20 @@ spec:
   template:
     spec:
       restartPolicy: Never
+      volumes:
+        - name: manifests
+          emptyDir: {}   # مساحة مؤقتة يشاركها init + container
+      initContainers:
+        - name: git-clone
+          image: alpine/git
+          command:
+            - sh
+            - -c
+            - |
+              git clone --depth=1 https://github.com/Ahmedrafat9/Microservices-project /work
+          volumeMounts:
+            - name: manifests
+              mountPath: /work
       containers:
         - name: kube-linter
           image: ghcr.io/stackrox/kube-linter:v0.6.6
@@ -22,9 +36,3 @@ spec:
           volumeMounts:
             - name: manifests
               mountPath: /work
-      volumes:
-        - name: manifests
-          gitRepo:
-            # ✅ لازم يبقى repo نفسه من غير /tree/main
-            repository: "https://github.com/Ahmedrafat9/Microservices-project"
-            revision: main
