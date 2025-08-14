@@ -132,6 +132,11 @@ spec:
           periodSeconds: 5
           tcpSocket:
             port: 6379
+        tolerations:
+        - key: "sandbox.gke.io/runtime"
+          operator: "Equal"
+          value: "gvisor"
+          effect: "NoSchedule"     
         volumeMounts:
         - mountPath: /data
           name: redis-data
