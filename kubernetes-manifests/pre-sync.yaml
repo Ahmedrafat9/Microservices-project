@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  generateName: kubelinter-check-
+  name: kubelinter-check
   annotations:
     argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/hook-weight: "-1"
