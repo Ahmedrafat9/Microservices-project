@@ -1,86 +1,32 @@
-apiVersion: tekton.dev/v1beta1
-kind: Task
+apiVersion: batch/v1
+kind: Job
 metadata:
-  name: kube-linter
-  namespace: ci
+  name: kube-linter-check
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
-  description: Task to run KubeLinter on Kubernetes manifests
-  params:
-    - name: informLintingOnly
-      type: string
-      default: "false"
-    - name: linterImage
-      type: string
-      default: "ghcr.io/stackrox/kube-linter:v0.6.6"
-    - name: repoURL
-      type: string
-      default: "https://github.com/Ahmedrafat9/Microservices-project"
-    - name: revision
-      type: string
-      default: "main"
-  workspaces:
-    - name: repository
-  steps:
-    - name: git-clone
-      image: alpine/git
-      script: |
-        #!/bin/sh
-        echo "📥 Cloning repo..."
-        git clone --depth 1 $(params.repoURL) /workspace/repository
-        cd /workspace/repository
-        git checkout $(params.revision)
-    - name: kube-linter
-      image: $(params.linterImage)
-      workingDir: /workspace/repository
-      script: |
-        #!/bin/sh
-        echo "🚀 Running KubeLinter..."
-        kube-linter lint /workspace/repository/kubernetes-manifests \
-          || { echo "❌ Linting failed!"; [ "$(params.informLintingOnly)" = "true" ] && exit 0 || exit 1; }
-
----
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
-metadata:
-  name: kube-linter-pipeline
-  namespace: ci
-spec:
-  workspaces:
-    - name: repository
-  params:
-    - name: informLintingOnly
-      type: string
-      default: "false"
-  tasks:
-    - name: run-linter
-      taskRef:
-        name: kube-linter
-      workspaces:
-        - name: repository
-          workspace: repository
-      params:
-        - name: informLintingOnly
-          value: "$(params.informLintingOnly)"
-
----
-apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
-metadata:
-  name: kube-linter-run
-  namespace: defualt
-spec:
-  pipelineRef:
-    name: kube-linter-pipeline
-  workspaces:
-    - name: repository
-      volumeClaimTemplate:
-        metadata:
-          name: repo-pvc
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 1Gi
-  params:
-    - name: informLintingOnly
-      value: "false"
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: git-clone
+          image: alpine/git
+          command:
+            - sh
+            - -c
+            - |
+              git clone --depth 1 https://github.com/Ahmedrafat9/Microservices-project /app
+      containers:
+        - name: kube-linter
+          image: ghcr.io/stackrox/kube-linter:v0.6.6
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "🚀 Running KubeLinter..."
+              kube-linter lint /app/kubernetes-manifests \
+              || { echo "❌ Linting failed! Fix issues before deploying."; exit 1; }
+      volumes:
+        - name: app
+          emptyDir: {}
