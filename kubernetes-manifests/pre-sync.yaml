@@ -16,8 +16,8 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - |
-              echo "Running KubeLinter checks..."
-              kube-linter lint /work \
+              echo "🚀 Running KubeLinter checks..."
+              kube-linter lint /work/kubernetes-manifests \
               || { echo "❌ Linting failed. Fix issues before deploying."; exit 1; }
           volumeMounts:
             - name: manifests
@@ -25,5 +25,6 @@ spec:
       volumes:
         - name: manifests
           gitRepo:
-            repository: "https://github.com/Ahmedrafat9/Microservices-project/tree/main/kubernetes-manifests"
+            # ✅ لازم يبقى repo نفسه من غير /tree/main
+            repository: "https://github.com/Ahmedrafat9/Microservices-project"
             revision: main
