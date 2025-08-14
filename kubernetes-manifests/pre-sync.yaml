@@ -1,74 +1,57 @@
-# Simple KubeLinter Pre-Sync Hook for ArgoCD
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: kubelinter-check
+  generateName: kubelinter-check-
   annotations:
     argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/hook-weight: "-1"
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
+  backoffLimit: 1
   template:
     spec:
       restartPolicy: Never
-      initContainers:
-      - name: git-clone
-        image: alpine/git:latest
-        command: ["/bin/sh", "-c"]
-        args:
-        - |
-          echo "📥 Cloning repository..."
-          git clone https://github.com/Ahmedrafat9/Microservices-project.git /workspace/repo
-          echo "✅ Repository cloned successfully"
-        volumeMounts:
-        - name: shared-workspace
-          mountPath: /workspace
       containers:
       - name: kubelinter
-        image: stackrox/kube-linter:latest
+        image: alpine:latest
         command: ["/bin/sh", "-c"]
         args:
         - |
-          echo "🔍 Checking for privileged containers and missing probes..."
+          # Install dependencies
+          apk add --no-cache git curl jq
           
-          cd /workspace/repo
+          # Download kube-linter
+          wget -O /tmp/kube-linter.tar.gz https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux.tar.gz
+          tar -xzf /tmp/kube-linter.tar.gz -C /tmp/
+          mv /tmp/kube-linter /usr/local/bin/
+          chmod +x /usr/local/bin/kube-linter
           
-          # Check if kubernetes-manifests directory exists
+          echo "📥 Cloning repository..."
+          git clone https://github.com/Ahmedrafat9/Microservices-project.git /tmp/repo
+          cd /tmp/repo
+          
+          echo "🔍 Checking kubernetes-manifests directory..."
           if [ ! -d "kubernetes-manifests" ]; then
-            echo "❌ 'kubernetes-manifests' directory not found!"
+            echo "❌ kubernetes-manifests directory not found!"
             exit 1
           fi
           
-          # Run KubeLinter - only check privileged containers and missing probes
-          echo "📋 Checking for privileged containers and missing probes..."
-          kube-linter lint "kubernetes-manifests" \
+          echo "📋 Running KubeLinter checks..."
+          kube-linter lint kubernetes-manifests \
             --include privileged-containers,no-liveness-probe,no-readiness-probe \
             --format json > /tmp/results.json || true
           
-          # Show results
-          if [ -s /tmp/results.json ]; then
+          # Check results
+          if [ -s /tmp/results.json ] && [ "$(cat /tmp/results.json | jq '.Reports | length')" -gt 0 ]; then
             echo ""
-            echo "🚨 Issues Found:"
-            cat /tmp/results.json | jq -r '.Reports[]? | "❌ \(.Check): \(.Object.K8sObject.Kind)/\(.Object.K8sObject.Name) - \(.Diagnostic.Message)"'
-            
-            # Check for privileged containers and missing probes
-            CRITICAL=$(cat /tmp/results.json | jq -r '.Reports[]? | select(.Check | contains("privileged-containers") or contains("no-liveness-probe") or contains("no-readiness-probe")) | .Check' | wc -l)
-            
-            if [ "$CRITICAL" -gt 0 ]; then
-              echo ""
-              echo "💥 Found privileged containers or missing health probes!"
-              echo "🚫 Deployment blocked - please fix:"
-              echo "   • Remove privileged: true from containers"
-              echo "   • Add livenessProbe to containers"
-              echo "   • Add readinessProbe to containers"
-              exit 1
-            fi
-          else
-            echo "✅ No issues found - all checks passed!"
+            echo "🚨 Issues found:"
+            cat /tmp/results.json | jq -r '.Reports[] | "❌ \(.Check): \(.Object.K8sObject.Kind)/\(.Object.K8sObject.Name)"'
+            echo ""
+            echo "💥 Deployment blocked! Fix these issues:"
+            echo "   • Remove 'privileged: true' from containers"
+            echo "   • Add livenessProbe to containers"
+            echo "   • Add readinessProbe to containers"
+            exit 1
           fi
-        volumeMounts:
-        - name: shared-workspace
-          mountPath: /workspace
-      volumes:
-      - name: shared-workspace
-        emptyDir: {}
+          
+          echo "✅ All checks passed!"
