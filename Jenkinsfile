@@ -89,6 +89,8 @@ pipeline {
                                             sh '''
                                                 if [ -f "go.mod" ]; then
                                                     echo "🔧 Installing Go dependencies for ''' + service + '''..."
+                                                     export PATH=$PATH:/usr/local/go/bin
+                                                    which go
                                                     if command -v go &> /dev/null; then
                                                         echo "✅ Go found: $(go version)"
                                                         go mod download
