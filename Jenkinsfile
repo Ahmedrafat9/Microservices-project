@@ -526,7 +526,7 @@ pipeline {
                     steps {
                         sh """
                             echo '🐳 Building C#-based Cart Service'
-                            docker build -f ./src/cartservice/src/Dockerfile -t ${DOCKER_REGISTRY}/cartservice:${IMAGE_TAG} ./src/cartservice
+                            ddocker build -f ./src/cartservice/src/Dockerfile -t ${DOCKER_REGISTRY}/cartservice:${IMAGE_TAG}  ./src/cartservice/src
                         """
                     }
                 }
