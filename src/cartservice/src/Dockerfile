@@ -18,7 +18,7 @@ ARG TARGETARCH
 WORKDIR /app
 COPY cartservice.csproj ./
 RUN dotnet restore cartservice.csproj 
-COPY . .
+COPY src/. .
 RUN dotnet publish cartservice.csproj \
     -c Release \
     -r linux-x64 \
