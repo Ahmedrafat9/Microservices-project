@@ -71,7 +71,7 @@ variable "jenkins_machine_type" {
 variable "jenkins_disk_size" {
   type        = number
   description = "Disk size for Jenkins instance (GB)"
-  default     = 20
+  default     = 60
 }
 variable "db_instance" {
   description = "Cloud SQL instance name"
@@ -101,13 +101,38 @@ variable "cloudsql_instance_name" {
   type        = string
   default     = "my-app-db-instance" 
 }
-variable "jenkins_instance_image" {
-  description = "Image to use for Jenkins VM"
-  type        = string
-  default     = "projects/debian-cloud/global/images/family/debian-11" 
-}
+
 
 variable "subnet" {
   description = "Subnetwork self_link to deploy Jenkins into"
   type        = string
+}
+
+variable "ssh_public_key_path" {
+  description = "Path to the SSH public key file for Jenkins VM"
+  type        = string
+}
+variable "instance_name" {
+  description = "Name of the Jenkins VM instance"
+  type        = string
+  default     = "jenkins-server"
+}
+
+
+
+variable "environment" {
+  description = "Environment label for Jenkins resources"
+  type        = string
+  default     = "dev"
+}
+variable "jenkins_instance_image" {
+  description = "Image to use for Jenkins VM"
+  type        = string
+  default     = "projects/ubuntu-os-cloud/global/images/ubuntu-2204-lts"
+}
+
+variable "jenkins_instance_image_family" {
+  description = "Image family to use for Jenkins VM"
+  type        = string
+  default     = "ubuntu-2204-lts"
 }

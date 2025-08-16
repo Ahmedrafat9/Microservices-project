@@ -138,18 +138,30 @@ module "redis" {
 
 # Jenkins module
 module "jenkins" {
-  source                = "./modules/jenkins"
-  project_id            = var.project_id
-  region                = var.region
-  zone                  = var.zone
+  source                 = "./modules/jenkins"
+  project_id             = var.project_id
+  zone                   = var.zone
   network               = module.network.network_name
   subnet                = module.network.subnet_name
-  machine_type          = var.jenkins_machine_type
-  trusted_ip            = var.trusted_ip
-  disk_size_gb          = var.jenkins_disk_size
-  kms_key_self_link     = var.kms_key_self_link
-  service_account_email = var.service_account_email
+  machine_type           = var.jenkins_machine_type
+  trusted_ip = var.trusted_ip
+  disk_size             = var.jenkins_disk_size
+  instance_name          = "jenkinsvm"
+  jenkins_instance_image = var.jenkins_instance_image
+  kms_key_self_link      = var.kms_key_self_link
+  ssh_public_key_path    = "~/.ssh/jenkins.pub"
+  environment            = "production"
+
+  # Remove extra disk since we only need one
+  
 
   depends_on = [google_project_service.compute]
 }
+
+
+
+
+
+
+
 

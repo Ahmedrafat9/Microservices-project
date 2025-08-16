@@ -61,6 +61,7 @@ resource "google_compute_instance" "jenkins" {
     disk_encryption_key_raw   = random_id.disk_encryption_key.b64_std
   }
 
+  
   network_interface {
     subnetwork         = var.subnet
     subnetwork_project = var.project_id
@@ -74,16 +75,9 @@ resource "google_compute_instance" "jenkins" {
     "block-project-ssh-keys" = "true"
   }
 
-  metadata_startup_script = <<-EOT
-    #!/bin/bash
-    apt-get update && apt-get install -y openjdk-17-jdk git curl gnupg2
-    curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io.key | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
-    echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/ | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
-    apt-get update && apt-get install -y jenkins
-    systemctl enable jenkins && systemctl start jenkins
-  EOT
+  
 
-  tags = ["jenkins"]
+  tags = ["jenkins-server", "allow-ssh"]
 
   service_account {
     email  = google_service_account.jenkins_sa.email
