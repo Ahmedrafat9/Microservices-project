@@ -45,10 +45,7 @@ variable "kms_key_self_link" {
   type        = string
 }
 
-variable "ssh_public_key_path" {
-  description = "Path to SSH public key for Jenkins VM"
-  type        = string
-}
+
 
 variable "jenkins_instance_image" {
   description = "OS image for Jenkins VM"

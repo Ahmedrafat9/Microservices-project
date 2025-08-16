@@ -63,7 +63,7 @@ resource "google_compute_firewall" "allow_ssh" {
     protocol = "tcp"
     ports    = ["8080"]
   }
-  source_ranges = ["0.0.0.0/0"] # أو يمكنك تحديد نطاق IP محدد
+  source_ranges = var.trusted_ip # أو يمكنك تحديد نطاق IP محدد
   direction     = "INGRESS"
   priority      = 1000
   target_tags = ["allow-ssh"]

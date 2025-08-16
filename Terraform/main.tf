@@ -149,7 +149,6 @@ module "jenkins" {
   instance_name          = "jenkinsvm"
   jenkins_instance_image = var.jenkins_instance_image
   kms_key_self_link      = var.kms_key_self_link
-  ssh_public_key_path    = "~/.ssh/jenkins.pub"
   environment            = "production"
 
   # Remove extra disk since we only need one

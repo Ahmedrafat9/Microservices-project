@@ -108,10 +108,7 @@ variable "subnet" {
   type        = string
 }
 
-variable "ssh_public_key_path" {
-  description = "Path to the SSH public key file for Jenkins VM"
-  type        = string
-}
+
 variable "instance_name" {
   description = "Name of the Jenkins VM instance"
   type        = string

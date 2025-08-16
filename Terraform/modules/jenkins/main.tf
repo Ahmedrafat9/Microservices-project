@@ -1,7 +1,5 @@
 # Add your SSH public key to a Terraform local variable
-locals {
-  jenkins_ssh_key = "jenkins:${file("~/.ssh/jenkins.pub")}"
-}
+
 
 # Generate random encryption key for the disk
 resource "random_id" "disk_encryption_key" {
@@ -61,7 +59,9 @@ resource "google_compute_instance" "jenkins" {
     disk_encryption_key_raw   = random_id.disk_encryption_key.b64_std
   }
 
-  
+  metadata = {
+    "block-project-ssh-keys" = "true"
+  }
   network_interface {
     subnetwork         = var.subnet
     subnetwork_project = var.project_id
@@ -70,10 +70,7 @@ resource "google_compute_instance" "jenkins" {
     access_config {} # Add public IP
   }
 
-  metadata = {
-    "ssh-keys"               = local.jenkins_ssh_key
-    "block-project-ssh-keys" = "true"
-  }
+  
 
   
 

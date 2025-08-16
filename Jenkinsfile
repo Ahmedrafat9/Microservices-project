@@ -4,7 +4,7 @@ pipeline {
     environment {
         GIT_LFS_SKIP_SMUDGE = '1'
         DOCKER_REGISTRY = 'ahmedrafat'
-        IMAGE_TAG = "${env.GIT_COMMIT}"
+        IMAGE_TAG = "${env.GIT_COMMIT.take(7)}"
         SNYK_TOKEN = credentials('snyk-token')
         PROJECT_NAME = 'microservices-project'
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
@@ -463,53 +463,7 @@ pipeline {
 
             }
         }
-        /*stage('Snyk Scan All Projects') {
-            steps {
-                script {
-                    sh '''
-                        # build_venv
-                        echo "🐍 Creating shared virtual environment..."
-                        python3 -m venv build_venv
-                        . build_venv/bin/activate
-                        pip install --upgrade pip setuptools wheel
-
-                        # تثبيت كل الـ requirements مع بعض
-                        for dir in src/emailservice src/loadgenerator src/recommendationservice src/shoppingassistantservice; do
-                            if [ -f "$dir/requirements.txt" ]; then
-                                echo "📦 Installing dependencies for $dir"
-                                pip install -r "$dir/requirements.txt"
-                            else
-                                echo "⏭️ No requirements.txt in $dir"
-                            fi
-                        done
-
-                        # تشغيل snyk test لكل مشروع باستخدام نفس venv
-                        for dir in src/emailservice src/loadgenerator src/recommendationservice src/shoppingassistantservice; do
-                            if [ -f "$dir/requirements.txt" ]; then
-                                echo "🔒 Running Snyk scan in $dir"
-                                snyk test --file="$dir/requirements.txt" || echo "⚠️ Snyk scan warnings in $dir"
-                            fi
-                        done
-
-                        # استعادة حزم .NET
-                        echo "🔧 Restoring .NET dependencies for cartservice..."
-                        if find src/cartservice -name "*.csproj" -o -name "*.sln" | grep -q .; then
-                            export PATH=$PATH:$HOME/.dotnet:$HOME/.dotnet/tools
-                            dotnet restore src/cartservice || echo "⚠️ dotnet restore failed"
-                        else
-                            echo "ℹ️ No .NET project files found in cartservice"
-                        fi
-
-                        # Snyk test شامل في الآخر
-                        echo "🔒 Running overall Snyk scan on all projects..."
-                        snyk test --all-projects || echo "⚠️ Snyk scan finished with warnings"
-
-                        deactivate
-                    '''
-                }
-            }
-        }
-            */
+        
         // STAGE 3: BUILD DOCKER IMAGES
         stage('Build Docker Images') {
             parallel {
