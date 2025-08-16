@@ -48,7 +48,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: ahmedrafat/recommendationservice:52
+        image: ahmedrafat/recommendationservice:1d26a0f39e90aa7fe5215d639d53ebb43d329f5b
         ports:
         - containerPort: 8080
         readinessProbe:
