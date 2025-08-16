@@ -19,6 +19,9 @@ pipeline {
         KEY_NAME = "cosign-key"
         PYTHONUNBUFFERED = '1'
         PIP_NO_CACHE_DIR = '1'
+        CHECKOV_REPORT = 'checkov-report.json'
+
+
         
     }
     
@@ -28,6 +31,38 @@ pipeline {
             steps {
                 // هنا بيتم جلب الكود من Git
                 git branch: 'main', url: "${REPO_URL}"
+            }
+        }
+        stage('Terraform Validate') {
+            steps {
+                dir('Terraform') {
+                    sh '''
+                        
+                        echo "🔍 Running Terraform Validate..."
+                        terraform init -backend=false
+                        terraform validate
+                    '''
+                }
+            }
+        }
+
+        stage('Run Checkov') {
+            steps {
+                dir('Terraform') {
+                    echo "Running Checkov scan..."
+                    // Generate JSON report
+                    sh "checkov -d . -o json > ${CHECKOV_REPORT} || true"
+                    sh "checkov -d . -o cli > ${CHECKOV_REPORT} || true"
+                }
+            }
+        }
+
+        stage('Archive Checkov Report') {
+            steps {
+                dir('Terraform') {
+                    archiveArtifacts artifacts: "${CHECKOV_REPORT}", allowEmptyArchive: true
+                    echo "Checkov report archived."
+                }
             }
         }
         // STAGE 1: TRUFFLEHOG SECRET DETECTION
@@ -1331,9 +1366,16 @@ pipeline {
                             fi
                         done
                     fi
+                    if [ -f Terraform/checkov-report.json ]; then
+                        echo "=== CHECKOV INFRASTRUCTURE SCAN SUMMARY ===" >> final_report.txt
+                        ISSUES=$(jq '.summary.failed_checks' Terraform/checkov-report.json 2>/dev/null || echo "0")
+                        echo "Failed checks: $ISSUES" >> final_report.txt
+                    else
+                        echo "Checkov report not found" >> final_report.txt
+                    fi
                 '''
                 
-                archiveArtifacts artifacts: 'final_report.txt, trivy-*-report.json, trufflehog_report.json, src/*/snyk-*.json', fingerprint: true, allowEmptyArchive: true
+                archiveArtifacts artifacts: 'final_report.txt, trivy-*-report.json, trufflehog_report.json, src/*/snyk-*.json, checkov-report.json', fingerprint: true, allowEmptyArchive: true
             }
 
             
