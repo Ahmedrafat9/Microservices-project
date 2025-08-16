@@ -1,3 +1,4 @@
+version: v1.36.0
 ignore:
   "SNYK-JAVA-IONETTY-8367012":
     - "*":
@@ -11,7 +12,6 @@ ignore:
     - "*":
         reason: "Tracking upgrade in next release cycle"
         expires: "2025-09-30"
-
   "SNYK-JAVA-IONETTY-1179953":
     - "*":
         reason: "False positive or low impact in our use case"
