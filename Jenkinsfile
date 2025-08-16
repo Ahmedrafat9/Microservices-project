@@ -257,7 +257,9 @@ pipeline {
                                             sh """
                                                 if [ -f "go.mod" ]; then
                                                     echo "🔍 Running Snyk vulnerability scan for ${service}..."
-                                                    
+                                                    export PATH=/usr/local/go/bin:$PATH
+                                                    go version
+
                                                     # Run Snyk test
                                                     ../../node_modules/.bin/snyk test --severity-threshold=medium --json > snyk-results-${service}.json || SNYK_EXIT=\$?
                                                     
