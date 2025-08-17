@@ -47,7 +47,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: ahmedrafat/checkoutservice:1d26a0f39e90aa7fe5215d639d53ebb43d329f5b
+          image: ahmedrafat/checkoutservice:54fcad0
           ports:
           - containerPort: 5050
           readinessProbe:
