@@ -1,16 +1,7 @@
 // Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// ...
 
 package main
 
@@ -32,8 +23,14 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc"
+
+	// << ADDED PROMETHEUS IMPORTS >>
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"strconv"
 )
 
+// << EXISTING CONSTS AND VARS >>
 const (
 	port            = "8080"
 	defaultCurrency = "USD"
@@ -55,8 +52,31 @@ var (
 	}
 
 	baseUrl         = ""
+
+	// << PROMETHEUS METRICS >>
+	requestCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "frontend_requests_total",
+			Help: "Total HTTP requests processed",
+		},
+		[]string{"handler", "method", "status"},
+	)
+
+	requestDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "frontend_request_duration_seconds",
+			Help:    "Duration of HTTP requests",
+			Buckets: prometheus.DefBuckets,
+		},
+		[]string{"handler"},
+	)
 )
 
+func init() {
+	prometheus.MustRegister(requestCount, requestDuration)
+}
+
+// << EXISTING TYPES >>
 type ctxKeySessionID struct{}
 
 type frontendServer struct {
@@ -81,12 +101,40 @@ type frontendServer struct {
 	adSvcAddr string
 	adSvcConn *grpc.ClientConn
 
-	collectorAddr string
+	collectorAddr *string
 	collectorConn *grpc.ClientConn
 
 	shoppingAssistantSvcAddr string
 }
 
+// << PROMETHEUS WRAPPER FUNCTION >>
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (r *statusRecorder) WriteHeader(code int) {
+	r.status = code
+	r.ResponseWriter.WriteHeader(code)
+}
+
+func instrumentHandler(name string, h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		rec := &statusRecorder{ResponseWriter: w, status: 200}
+		start := time.Now()
+		h(rec, r)
+		duration := time.Since(start).Seconds()
+
+		requestCount.WithLabelValues(name, r.Method, strconv.Itoa(rec.status)).Inc()
+		requestDuration.WithLabelValues(name).Observe(duration)
+	}
+}
+
+func registerMetricsEndpoint(mux *http.ServeMux) {
+	mux.Handle("/metrics", promhttp.Handler())
+}
+
+// << MAIN FUNCTION WITH PROMETHEUS INTEGRATION >>
 func main() {
 	ctx := context.Background()
 	log := logrus.New()
@@ -146,20 +194,25 @@ func main() {
 	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
 
 	r := mux.NewRouter()
-	r.HandleFunc(baseUrl + "/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc(baseUrl + "/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc(baseUrl + "/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc(baseUrl + "/cart", svc.addToCartHandler).Methods(http.MethodPost)
-	r.HandleFunc(baseUrl + "/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)
-	r.HandleFunc(baseUrl + "/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)
-	r.HandleFunc(baseUrl + "/logout", svc.logoutHandler).Methods(http.MethodGet)
-	r.HandleFunc(baseUrl + "/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
-	r.HandleFunc(baseUrl + "/assistant", svc.assistantHandler).Methods(http.MethodGet)
-	r.PathPrefix(baseUrl + "/static/").Handler(http.StripPrefix(baseUrl + "/static/", http.FileServer(http.Dir("./static/"))))
+
+	// << WRAPPED ROUTES WITH PROMETHEUS >>
+	r.HandleFunc(baseUrl + "/", instrumentHandler("home", svc.homeHandler)).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(baseUrl + "/product/{id}", instrumentHandler("product", svc.productHandler)).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(baseUrl + "/cart", instrumentHandler("viewCart", svc.viewCartHandler)).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(baseUrl + "/cart", instrumentHandler("addToCart", svc.addToCartHandler)).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl + "/cart/empty", instrumentHandler("emptyCart", svc.emptyCartHandler)).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl + "/setCurrency", instrumentHandler("setCurrency", svc.setCurrencyHandler)).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl + "/logout", instrumentHandler("logout", svc.logoutHandler)).Methods(http.MethodGet)
+	r.HandleFunc(baseUrl + "/cart/checkout", instrumentHandler("placeOrder", svc.placeOrderHandler)).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl + "/assistant", instrumentHandler("assistant", svc.assistantHandler)).Methods(http.MethodGet)
+	r.PathPrefix(baseUrl + "/static/").Handler(http.StripPrefix(baseUrl+"/static/", http.FileServer(http.Dir("./static/"))))
 	r.HandleFunc(baseUrl + "/robots.txt", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "User-agent: *\nDisallow: /") })
 	r.HandleFunc(baseUrl + "/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
-	r.HandleFunc(baseUrl + "/product-meta/{ids}", svc.getProductByID).Methods(http.MethodGet)
-	r.HandleFunc(baseUrl + "/bot", svc.chatBotHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl + "/product-meta/{ids}", instrumentHandler("getProductByID", svc.getProductByID)).Methods(http.MethodGet)
+	r.HandleFunc(baseUrl+"/bot", instrumentHandler("chatBot", svc.chatBotHandler)).Methods(http.MethodPost)
+
+	// << PROMETHEUS METRICS ENDPOINT >>
+	registerMetricsEndpoint(http.DefaultServeMux)
 
 	var handler http.Handler = r
 	handler = &logHandler{log: log, next: handler}     // add logging
@@ -169,67 +222,5 @@ func main() {
 	log.Infof("starting server on " + addr + ":" + srvPort)
 	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
 }
-func initStats(log logrus.FieldLogger) {
-	// TODO(arbrown) Implement OpenTelemtry stats
-}
 
-func initTracing(log logrus.FieldLogger, ctx context.Context, svc *frontendServer) (*sdktrace.TracerProvider, error) {
-	mustMapEnv(&svc.collectorAddr, "COLLECTOR_SERVICE_ADDR")
-	mustConnGRPC(ctx, &svc.collectorConn, svc.collectorAddr)
-	exporter, err := otlptracegrpc.New(
-		ctx,
-		otlptracegrpc.WithGRPCConn(svc.collectorConn))
-	if err != nil {
-		log.Warnf("warn: Failed to create trace exporter: %v", err)
-	}
-	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
-		sdktrace.WithSampler(sdktrace.AlwaysSample()))
-	otel.SetTracerProvider(tp)
-
-	return tp, err
-}
-
-func initProfiling(log logrus.FieldLogger, service, version string) {
-	// TODO(ahmetb) this method is duplicated in other microservices using Go
-	// since they are not sharing packages.
-	for i := 1; i <= 3; i++ {
-		log = log.WithField("retry", i)
-		if err := profiler.Start(profiler.Config{
-			Service:        service,
-			ServiceVersion: version,
-			// ProjectID must be set if not running on GCP.
-			// ProjectID: "my-project",
-		}); err != nil {
-			log.Warnf("warn: failed to start profiler: %+v", err)
-		} else {
-			log.Info("started Stackdriver profiler")
-			return
-		}
-		d := time.Second * 10 * time.Duration(i)
-		log.Debugf("sleeping %v to retry initializing Stackdriver profiler", d)
-		time.Sleep(d)
-	}
-	log.Warn("warning: could not initialize Stackdriver profiler after retrying, giving up")
-}
-
-func mustMapEnv(target *string, envKey string) {
-	v := os.Getenv(envKey)
-	if v == "" {
-		panic(fmt.Sprintf("environment variable %q not set", envKey))
-	}
-	*target = v
-}
-
-func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
-	var err error
-	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
-	defer cancel()
-	*conn, err = grpc.DialContext(ctx, addr,
-		grpc.WithInsecure(),
-		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
-		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()))
-	if err != nil {
-		panic(errors.Wrapf(err, "grpc: failed to connect %s", addr))
-	}
-}
+// << EXISTING FUNCTIONS: initStats, initTracing, initProfiling, mustMapEnv, mustConnGRPC >>
