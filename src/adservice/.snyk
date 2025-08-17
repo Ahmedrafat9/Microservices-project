@@ -1,4 +1,3 @@
-version: v1.36.0
 ignore:
   "SNYK-JAVA-IONETTY-8367012":
     - "*":

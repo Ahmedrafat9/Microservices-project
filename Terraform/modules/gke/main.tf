@@ -122,3 +122,44 @@ resource "google_container_node_pool" "primary_nodes" {
   }
 }
 
+resource "google_container_node_pool" "standard_pool" {
+  provider   = google-beta
+  name       = "standard-pool"
+  cluster    = google_container_cluster.gke.name
+  location   = var.region
+  project    = var.project_id
+  initial_node_count = 1
+
+  management {
+    auto_upgrade = true
+    auto_repair  = true
+  }
+
+  #checkov:skip=CKV_GCP_68:Skipping Shielded Nodes because shielded_instance_config is not supported in default node_config
+
+
+  node_config {
+    machine_type = "e2-medium"
+    disk_size_gb = 30
+    disk_type    = "pd-balanced"
+
+    shielded_instance_config {
+      
+      enable_integrity_monitoring = true
+      #secure_boot          = true
+    }
+    
+    workload_metadata_config {
+      mode = "GKE_METADATA"
+    }
+
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/servicecontrol",
+      "https://www.googleapis.com/auth/trace.append"
+    ]
+  }
+}
