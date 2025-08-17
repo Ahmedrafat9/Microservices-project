@@ -48,7 +48,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: ahmedrafat/paymentservice:54fcad0
+        image: ahmedrafat/paymentservice:576c8a2
         ports:
         - containerPort: 50051
         env:

@@ -71,7 +71,7 @@ spec:
               value: "frontend:80"
       containers:
         - name: main
-          image: ahmedrafat/loadgenerator:54fcad0
+          image: ahmedrafat/loadgenerator:576c8a2
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
