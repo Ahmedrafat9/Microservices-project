@@ -27,6 +27,7 @@ resources:
  - recommendationservice.yaml
  - shippingservice.yaml
  - pre-sync.yaml
+ - ingress-resource.yaml
 # components:
 # - ../kustomize/components/cymbal-branding
 # - ../kustomize/components/google-cloud-operations
