@@ -17,6 +17,7 @@ This project provisions a secure, production-grade infrastructure on Google Clou
 modules/
 ├── gke
 ├── jenkins
+├── Firewall
 ├── network
 ├── redis
 └── sql
