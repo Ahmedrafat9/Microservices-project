@@ -53,7 +53,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: ahmedrafat/currencyservice:576c8a2
+        image: ahmedrafat/currencyservice:03f0246
         ports:
         - name: grpc
           containerPort: 7000

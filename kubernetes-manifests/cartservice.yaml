@@ -53,7 +53,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: ahmedrafat/cartservice:576c8a2
+        image: ahmedrafat/cartservice:03f0246
         ports:
         - containerPort: 7070
         env:
