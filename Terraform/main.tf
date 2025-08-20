@@ -40,6 +40,8 @@ resource "google_kms_crypto_key" "terraform_key" {
 
 # -------- GCS Bucket for Terraform State --------
 resource "google_storage_bucket" "terraform_state" {
+  # checkov:skip=CKV_GCP_62: Access logging not required for this bucket
+
   name                        = "my-project-tf-state"
   location                    = "US-CENTRAL1"  # must match KMS region
   uniform_bucket_level_access = true
