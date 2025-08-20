@@ -18,6 +18,11 @@ metadata:
   name: emailservice
   labels:
     app: emailservice
+  annotations:
+    # Tell Argo CD Image Updater which container to track
+    argocd-image-updater.argoproj.io/image-list: server=ahmedrafat/emailservice
+    # Update strategy: use latest tag automatically
+    argocd-image-updater.argoproj.io/server.update-strategy: latest 
 spec:
   selector:
     matchLabels:
