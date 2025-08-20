@@ -20,9 +20,7 @@ pipeline {
         PYTHONUNBUFFERED = '1'
         PIP_NO_CACHE_DIR = '1'
         CHECKOV_REPORT = 'checkov-report.json'
-
-
-        
+        CHECKOV_REPORT_REQUIRED = 'checkov-report-required.json'
     }
     
     stages {
@@ -53,6 +51,7 @@ pipeline {
                     // Generate JSON report
                     sh "checkov -d . -o json > ${CHECKOV_REPORT} || true"
                     sh "checkov -d . -o cli > ${CHECKOV_REPORT} || true"
+                    sh "checkov -d . --check CKV_GCP_37 --check CKV_GCP_114 -o cli > ${CHECKOV_REPORT_REQUIRED} || true"
                 }
             }
         }
@@ -1304,7 +1303,6 @@ pipeline {
                     echo "" >> final_report.txt
                     
                     echo "=== SECURITY SCANS COMPLETED ===" >> final_report.txt
-                    echo "- TruffleHog Secret Detection: $([ -f trufflehog_report.json ] && echo 'COMPLETED' || echo 'FAILED')" >> final_report.txt
                     echo "- Snyk Vulnerability Scan: $(find . -name 'snyk-results-*.json' | wc -l) services scanned" >> final_report.txt
                     echo "- Trivy Container Scan: $(find . -name 'trivy-*-report.json' | wc -l) images scanned" >> final_report.txt
                     echo "" >> final_report.txt
@@ -1368,13 +1366,15 @@ pipeline {
                     if [ -f Terraform/checkov-report.json ]; then
                         echo "=== CHECKOV INFRASTRUCTURE SCAN SUMMARY ===" >> final_report.txt
                         ISSUES=$(jq '.summary.failed_checks' Terraform/checkov-report.json 2>/dev/null || echo "0")
+                        IsSUES_REQUIRED=$(jq '.summary.failed_checks_required' Terraform/checkov-report-required.json 2>/dev/null || echo "0")
+                        echo "Total failed checks: $ISSUES" >> final_report.txt
                         echo "Failed checks: $ISSUES" >> final_report.txt
                     else
                         echo "Checkov report not found" >> final_report.txt
                     fi
                 '''
                 
-                archiveArtifacts artifacts: 'final_report.txt, trivy-*-report.json, trufflehog_report.json, src/*/snyk-*.json, checkov-report.json', fingerprint: true, allowEmptyArchive: true
+                archiveArtifacts artifacts: 'final_report.txt, trivy-*-report.json, trufflehog_report.json, src/*/snyk-*.json, checkov-report.json, checkov-report-required.json', fingerprint: true, allowEmptyArchive: true
             }
 
             
@@ -1386,7 +1386,10 @@ pipeline {
             🎉 ========================================
             ✅ PIPELINE COMPLETED SUCCESSFULLY! ✅
             ========================================
-            
+            Infrastructure checks completed :
+            1- Terraform validation
+            2- Terraform Checkov scan
+
             📋 EXECUTION SEQUENCE COMPLETED:
             1. ✅ TruffleHog Secret Detection
             2. ✅ Snyk Security Analysis  
@@ -1394,6 +1397,9 @@ pipeline {
             4. ✅ Trivy Container Security Scan
             5. ✅ Cosign Setup & Image Signing
             6. ✅ Docker Image Push & Verification
+            7. ✅ Kubernetes Manifests Updated
+            8. ✅ Commit & Push Updates
+
             
             🚀 All 12 microservices successfully:
             - Built as Docker images with build-specific tags
@@ -1418,6 +1424,7 @@ pipeline {
             ===============================
             
             🔍 Possible failure points:
+            0. checkov scan failed
             1. TruffleHog secret detection issues
             2. Snyk authentication or scan failures
             3. Docker build errors (missing dependencies)
@@ -1425,7 +1432,8 @@ pipeline {
             5. Cosign setup or GCP KMS authentication
             6. Image signing before push
             7. Docker registry authentication issues
-            
+            8. Kubernetes manifest updates failed
+            9. Git commit or push errors
             📋 Check the specific stage logs and archived reports.
             '''
         }
