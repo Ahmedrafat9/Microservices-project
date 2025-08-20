@@ -146,8 +146,8 @@ spec:
             memory: 256Mi
             cpu: 125m
           requests:
-            cpu: 40m
-            memory: 200Mi
+            cpu: 500m
+            memory: 400Mi
       volumes:
       - name: redis-data
         emptyDir: {}

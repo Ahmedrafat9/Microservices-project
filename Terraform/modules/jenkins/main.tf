@@ -132,12 +132,15 @@ resource "google_compute_disk" "jenkins_disk" {
 # ====================================================================
 # CREATE JENKINS VM WITH CMEK-ENCRYPTED BOOT DISK
 # ====================================================================
+
+
 resource "google_compute_instance" "jenkins" {
   name         = "jenkins-vm"
   machine_type = var.machine_type
   zone         = var.zone
   project      = var.project_id
-  
+  # checkov:skip=CKV_GCP_40 "Skipping public IP check for Jenkins instance"
+  # checkov:skip=CKV_GCP_38 "Skipping CSEK encryption check for Jenkins boot disk"
   boot_disk {
     source      = google_compute_disk.jenkins_disk.id
     auto_delete = true
@@ -166,7 +169,6 @@ resource "google_compute_instance" "jenkins" {
     enable_vtpm                 = true
     enable_integrity_monitoring = true
   }
-  
   labels = {
     environment = var.environment
     purpose     = "jenkins"

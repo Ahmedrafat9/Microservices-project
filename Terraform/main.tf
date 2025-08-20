@@ -21,17 +21,18 @@ provider "google" {
 }
 
 # -------- KMS Key Ring (in bucket region) --------
-resource "google_kms_key_ring" "terraform" {
+resource "google_kms_key_ring" "terraform_keyring" {
   name     = "terraform-keyring"
   location = "us-central1"  # must match bucket region
+  project  = var.project_id
 }
 
 # -------- KMS Crypto Key --------
 resource "google_kms_crypto_key" "terraform_key" {
   name     = "terraform-key"
-  key_ring = google_kms_key_ring.terraform.id
+  key_ring = google_kms_key_ring.terraform_keyring.id
   purpose  = "ENCRYPT_DECRYPT"
-  rotation_period = "7776000s"
+  rotation_period = "7776000s"  # 90 days
   lifecycle {
     prevent_destroy = true
   }
@@ -39,11 +40,10 @@ resource "google_kms_crypto_key" "terraform_key" {
 
 # -------- GCS Bucket for Terraform State --------
 resource "google_storage_bucket" "terraform_state" {
-  name                        = "my-project-tf-state"  # your existing bucket
-  location                    = "US-CENTRAL1"          # must match KMS region
+  name                        = "my-project-tf-state"
+  location                    = "US-CENTRAL1"  # must match KMS region
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
-  #checkov:skip=CKV_GCP_62:Skipping bucket access logs because log bucket not required for this project
 
   versioning {
     enabled = true
@@ -54,9 +54,7 @@ resource "google_storage_bucket" "terraform_state" {
   }
 }
 
-# -------- Terraform Service Account (manual) --------
-# If you cannot fully manage it in Terraform, just reference it by email
-# You already created this SA in task-464917
+# -------- Terraform Service Account --------
 locals {
   terraform_sa_email = "terraform-sa@task-464917.iam.gserviceaccount.com"
 }
@@ -67,13 +65,6 @@ resource "google_storage_bucket_iam_member" "terraform_sa_access" {
   role   = "roles/storage.objectAdmin"
   member = "serviceAccount:${local.terraform_sa_email}"
 }
-
-resource "google_kms_key_ring" "terraform_keyring" {
-  name     = "terraform-keyring"
-  location = "us-central1"
-  project  = var.project_id
-}
-
 
 
 resource "google_project_service" "compute" {

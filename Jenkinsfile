@@ -1295,12 +1295,12 @@ pipeline {
                     echo "" >> final_report.txt
                     
                     echo "=== PIPELINE EXECUTION ORDER ===" >> final_report.txt
-                    echo "1. ✅ TruffleHog Secret Detection" >> final_report.txt
-                    echo "2. ✅ Snyk Security Analysis (Dependencies + Code)" >> final_report.txt
-                    echo "3. ✅ Docker Image Build" >> final_report.txt
-                    echo "4. ✅ Trivy Container Security Scan" >> final_report.txt
-                    echo "5. ✅ Cosign Setup & Image Signing" >> final_report.txt
-                    echo "6. ✅ Docker Image Push & Signature Verification" >> final_report.txt
+                    echo "1. TruffleHog Secret Detection" >> final_report.txt
+                    echo "2. Snyk Security Analysis (Dependencies + Code)" >> final_report.txt
+                    echo "3. Docker Image Build" >> final_report.txt
+                    echo "4. Trivy Container Security Scan" >> final_report.txt
+                    echo "5. Cosign Setup & Image Signing" >> final_report.txt
+                    echo "6. Docker Image Push & Signature Verification" >> final_report.txt
                     echo "" >> final_report.txt
                     
                     echo "=== SECURITY SCANS COMPLETED ===" >> final_report.txt
@@ -1326,7 +1326,7 @@ pipeline {
                     for IMAGE in "${IMAGES[@]}"; do
                         FULL_IMAGE="${DOCKER_REGISTRY}/${IMAGE}:${IMAGE_TAG}"
                         
-                        # تحقق إذا الصورة موجودة محلياً
+                      
                         SIZE=$(docker image inspect --format='{{.Size}}' "$FULL_IMAGE" 2>/dev/null || echo "")
                         
                         if [ -z "$SIZE" ]; then
@@ -1361,7 +1361,6 @@ pipeline {
                                 service=$(basename "$file" | sed 's/trivy-//g' | sed 's/-report.json//g')
                                 critical=$(jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL") | .VulnerabilityID' "$file" | wc -l 2>/dev/null || echo "0")
                                 high=$(jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH") | .VulnerabilityID' "$file" | wc -l 2>/dev/null || echo "0")
-                                medium=$(jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "MEDIUM") | .VulnerabilityID' "$file" | wc -l 2>/dev/null || echo "0")
                                 echo "$service: Critical=$critical, High=$high, Medium=$medium" >> final_report.txt
                             fi
                         done

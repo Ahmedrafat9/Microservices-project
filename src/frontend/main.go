@@ -15,23 +15,28 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-	"os"
-	"time"
+    "context"
+    "fmt"
+    "net/http"
+    "os"
+    "strconv"
+    "time"
 
-	"cloud.google.com/go/profiler"
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/propagation"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"google.golang.org/grpc"
+    "cloud.google.com/go/profiler"
+    "github.com/gorilla/mux"
+    "github.com/pkg/errors"
+    "github.com/sirupsen/logrus"
+    "github.com/prometheus/client_golang/prometheus"
+    "github.com/prometheus/client_golang/prometheus/promhttp"
+
+    "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+    "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+    "go.opentelemetry.io/otel"
+    "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+    "go.opentelemetry.io/otel/propagation"
+    sdktrace "go.opentelemetry.io/otel/sdk/trace"
+
+    "google.golang.org/grpc"
 )
 
 const (
@@ -54,8 +59,52 @@ var (
 		"TRY": true,
 	}
 
-	baseUrl         = ""
+	baseUrl = ""
 )
+
+var (
+    httpRequestsTotal = prometheus.NewCounterVec(
+        prometheus.CounterOpts{
+            Name: "frontend_http_requests_total",
+            Help: "Total number of HTTP requests",
+        },
+        []string{"path", "method", "status"},
+    )
+
+    httpRequestDuration = prometheus.NewHistogramVec(
+        prometheus.HistogramOpts{
+            Name:    "frontend_http_request_duration_seconds",
+            Help:    "HTTP request duration in seconds",
+            Buckets: prometheus.DefBuckets,
+        },
+        []string{"path", "method", "status"},
+    )
+
+    // Additional metrics for better error rate monitoring
+    httpErrorsTotal = prometheus.NewCounterVec(
+        prometheus.CounterOpts{
+            Name: "frontend_http_errors_total",
+            Help: "Total number of HTTP errors (4xx and 5xx status codes)",
+        },
+        []string{"path", "method", "status"},
+    )
+
+    httpRequestsInFlight = prometheus.NewGauge(
+        prometheus.GaugeOpts{
+            Name: "frontend_http_requests_in_flight",
+            Help: "Number of HTTP requests currently being served",
+        },
+    )
+)
+
+func init() {
+    prometheus.MustRegister(
+        httpRequestsTotal,
+        httpRequestDuration,
+        httpErrorsTotal,
+        httpRequestsInFlight,
+    )
+}
 
 type ctxKeySessionID struct{}
 
@@ -85,6 +134,97 @@ type frontendServer struct {
 	collectorConn *grpc.ClientConn
 
 	shoppingAssistantSvcAddr string
+}
+
+// responseWriter wraps http.ResponseWriter to capture status code
+type responseWriter struct {
+    http.ResponseWriter
+    statusCode int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+    rw.statusCode = code
+    rw.ResponseWriter.WriteHeader(code)
+}
+
+// MetricsMiddleware wraps HTTP handlers to collect metrics for error rate calculation
+func MetricsMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+        
+        // Skip metrics collection for the metrics endpoint itself
+        if r.URL.Path == "/metrics" || r.URL.Path == baseUrl+"/metrics" {
+            next.ServeHTTP(w, r)
+            return
+        }
+        
+        // Increment in-flight requests
+        httpRequestsInFlight.Inc()
+        defer httpRequestsInFlight.Dec()
+
+        // Create a response writer that captures the status code
+        wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+        
+        // Call the next handler
+        next.ServeHTTP(wrapped, r)
+        
+        // Calculate duration
+        duration := time.Since(start).Seconds()
+        
+        // Get labels - normalize path for better grouping
+        path := normalizePath(r.URL.Path)
+        method := r.Method
+        status := strconv.Itoa(wrapped.statusCode)
+        
+        // Record metrics
+        httpRequestsTotal.WithLabelValues(path, method, status).Inc()
+        httpRequestDuration.WithLabelValues(path, method, status).Observe(duration)
+        
+        // Record errors (4xx and 5xx status codes)
+        if wrapped.statusCode >= 400 {
+            httpErrorsTotal.WithLabelValues(path, method, status).Inc()
+        }
+    })
+}
+
+// normalizePath normalizes URL paths to reduce cardinality in metrics
+func normalizePath(path string) string {
+    // Remove baseUrl prefix if present
+    if baseUrl != "" && len(path) > len(baseUrl) && path[:len(baseUrl)] == baseUrl {
+        path = path[len(baseUrl):]
+    }
+    
+    // Normalize common patterns
+    switch {
+    case path == "/" || path == "":
+        return "/"
+    case path == "/_healthz":
+        return "/_healthz"
+    case path == "/robots.txt":
+        return "/robots.txt"
+    case path == "/cart":
+        return "/cart"
+    case path == "/cart/empty":
+        return "/cart/empty"
+    case path == "/cart/checkout":
+        return "/cart/checkout"
+    case path == "/setCurrency":
+        return "/setCurrency"
+    case path == "/logout":
+        return "/logout"
+    case path == "/assistant":
+        return "/assistant"
+    case path == "/bot":
+        return "/bot"
+    case len(path) > 8 && path[:8] == "/product":
+        return "/product/{id}"
+    case len(path) > 13 && path[:13] == "/product-meta":
+        return "/product-meta/{ids}"
+    case len(path) > 7 && path[:7] == "/static":
+        return "/static/*"
+    default:
+        return path
+    }
 }
 
 func main() {
@@ -146,22 +286,24 @@ func main() {
 	mustConnGRPC(ctx, &svc.adSvcConn, svc.adSvcAddr)
 
 	r := mux.NewRouter()
-	r.HandleFunc(baseUrl + "/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc(baseUrl + "/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc(baseUrl + "/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc(baseUrl + "/cart", svc.addToCartHandler).Methods(http.MethodPost)
-	r.HandleFunc(baseUrl + "/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)
-	r.HandleFunc(baseUrl + "/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)
-	r.HandleFunc(baseUrl + "/logout", svc.logoutHandler).Methods(http.MethodGet)
-	r.HandleFunc(baseUrl + "/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
-	r.HandleFunc(baseUrl + "/assistant", svc.assistantHandler).Methods(http.MethodGet)
-	r.PathPrefix(baseUrl + "/static/").Handler(http.StripPrefix(baseUrl + "/static/", http.FileServer(http.Dir("./static/"))))
-	r.HandleFunc(baseUrl + "/robots.txt", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "User-agent: *\nDisallow: /") })
-	r.HandleFunc(baseUrl + "/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
-	r.HandleFunc(baseUrl + "/product-meta/{ids}", svc.getProductByID).Methods(http.MethodGet)
-	r.HandleFunc(baseUrl + "/bot", svc.chatBotHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl+"/", svc.homeHandler).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(baseUrl+"/product/{id}", svc.productHandler).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(baseUrl+"/cart", svc.viewCartHandler).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(baseUrl+"/cart", svc.addToCartHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl+"/cart/empty", svc.emptyCartHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl+"/setCurrency", svc.setCurrencyHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl+"/logout", svc.logoutHandler).Methods(http.MethodGet)
+	r.HandleFunc(baseUrl+"/cart/checkout", svc.placeOrderHandler).Methods(http.MethodPost)
+	r.HandleFunc(baseUrl+"/assistant", svc.assistantHandler).Methods(http.MethodGet)
+	r.PathPrefix(baseUrl+"/static/").Handler(http.StripPrefix(baseUrl+"/static/", http.FileServer(http.Dir("./static/"))))
+	r.HandleFunc(baseUrl+"/robots.txt", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "User-agent: *\nDisallow: /") })
+	r.HandleFunc(baseUrl+"/_healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") })
+	r.HandleFunc(baseUrl+"/product-meta/{ids}", svc.getProductByID).Methods(http.MethodGet)
+	r.HandleFunc(baseUrl+"/bot", svc.chatBotHandler).Methods(http.MethodPost)
+	r.Handle(baseUrl+"/metrics", promhttp.Handler())
 
 	var handler http.Handler = r
+	handler = MetricsMiddleware(handler)               // add metrics collection FIRST
 	handler = &logHandler{log: log, next: handler}     // add logging
 	handler = ensureSessionID(handler)                 // add session ID
 	handler = otelhttp.NewHandler(handler, "frontend") // add OTel tracing
@@ -169,6 +311,7 @@ func main() {
 	log.Infof("starting server on " + addr + ":" + srvPort)
 	log.Fatal(http.ListenAndServe(addr+":"+srvPort, handler))
 }
+
 func initStats(log logrus.FieldLogger) {
 	// TODO(arbrown) Implement OpenTelemtry stats
 }
@@ -222,14 +365,16 @@ func mustMapEnv(target *string, envKey string) {
 }
 
 func mustConnGRPC(ctx context.Context, conn **grpc.ClientConn, addr string) {
-	var err error
-	ctx, cancel := context.WithTimeout(ctx, time.Second*3)
-	defer cancel()
-	*conn, err = grpc.DialContext(ctx, addr,
-		grpc.WithInsecure(),
-		grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()),
-		grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()))
-	if err != nil {
-		panic(errors.Wrapf(err, "grpc: failed to connect %s", addr))
-	}
+    var err error
+    ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+    defer cancel()
+
+    *conn, err = grpc.NewClient(
+        addr,
+        grpc.WithInsecure(),
+        grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+    )
+    if err != nil {
+        panic(errors.Wrapf(err, "grpc: failed to connect %s", addr))
+    }
 }
