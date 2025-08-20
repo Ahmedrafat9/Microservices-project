@@ -11,8 +11,8 @@ pipeline {
         GIT_COMMIT_SHORT = "${env.GIT_COMMIT?.take(7) ?: 'unknown'}"
         GIT_TOKEN = credentials('github-token')  // هنا تحط الـ ID بتاع ال-Credential في Jenkins
         REPO_URL = "https://${GIT_TOKEN}@github.com/Ahmedrafat9/Microservices-project.git"
-    
-        // GCP KMS Configuration for Cosign
+        
+        /// GCP KMS Configuration for Cosign
         GCP_PROJECT = "task-464917"
         KEY_LOCATION = "global"
         KEY_RING = "my-keyring"
