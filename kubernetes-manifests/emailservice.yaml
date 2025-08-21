@@ -53,7 +53,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: ahmedrafat/emailservice:03f0246
+        image: ahmedrafat/emailservice:86e8847
         ports:
         - containerPort: 8080
         env:

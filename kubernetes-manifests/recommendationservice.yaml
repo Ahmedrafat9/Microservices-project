@@ -53,7 +53,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: ahmedrafat/recommendationservice:03f0246
+        image: ahmedrafat/recommendationservice:86e8847
         ports:
         - containerPort: 8080
         readinessProbe:

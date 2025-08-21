@@ -53,7 +53,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: ahmedrafat/adservice:03f0246
+        image: ahmedrafat/adservice:86e8847
         ports:
         - containerPort: 9555
         env:
