@@ -61,6 +61,8 @@ pipeline {
                 dir('Terraform') {
                     archiveArtifacts artifacts: "${CHECKOV_REPORT}", allowEmptyArchive: true
                     echo "Checkov report archived."
+                    archiveArtifacts artifacts: "${CHECKOV_REPORT_REQUIRED}", allowEmptyArchive: true
+                    echo "Checkov required report archived."
                 }
             }
         }
@@ -1359,18 +1361,25 @@ pipeline {
                                 service=$(basename "$file" | sed 's/trivy-//g' | sed 's/-report.json//g')
                                 critical=$(jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL") | .VulnerabilityID' "$file" | wc -l 2>/dev/null || echo "0")
                                 high=$(jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH") | .VulnerabilityID' "$file" | wc -l 2>/dev/null || echo "0")
-                                echo "$service: Critical=$critical, High=$high, Medium=$medium" >> final_report.txt
+                                echo "$service: Critical=$critical, High=$high" >> final_report.txt
                             fi
                         done
                     fi
                     if [ -f Terraform/checkov-report.json ]; then
                         echo "=== CHECKOV INFRASTRUCTURE SCAN SUMMARY ===" >> final_report.txt
                         ISSUES=$(jq '.summary.failed_checks' Terraform/checkov-report.json 2>/dev/null || echo "0")
-                        IsSUES_REQUIRED=$(jq '.summary.failed_checks_required' Terraform/checkov-report-required.json 2>/dev/null || echo "0")
                         echo "Total failed checks: $ISSUES" >> final_report.txt
                         echo "Failed checks: $ISSUES" >> final_report.txt
                     else
                         echo "Checkov report not found" >> final_report.txt
+                    fi
+                    if [ -f Terraform/checkov-report-required.json ]; then
+                        echo "=== CHECKOV REQUIRED RESOURCES SCAN SUMMARY ===" >> final_report.txt
+                        ISSUES=$(jq '.summary.failed_checks' Terraform/checkov-report-required.json 2>/dev/null || echo "0")
+                        echo "Total failed checks: $ISSUES" >> final_report.txt
+                        echo "Failed checks: $ISSUES" >> final_report.txt
+                    else
+                        echo "Checkov required resources report not found" >> final_report.txt
                     fi
                 '''
                 
