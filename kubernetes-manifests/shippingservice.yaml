@@ -52,7 +52,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: ahmedrafat/shippingservice:576c8a2
+        image: ahmedrafat/shippingservice:03f0246
         ports:
         - containerPort: 50051
         env:
