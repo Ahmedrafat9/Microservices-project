@@ -73,22 +73,22 @@ pipeline {
                     echo "🔍 Running TruffleHog secret detection scan..."
                     docker run --rm -v "$(pwd)":/src \
                         trufflesecurity/trufflehog:latest \
-                        git --json --only-verified file:///src > trufflehog-git-verified.json
+                        git --json --only-verified file:///src > trufflehog-git-verified.json || true
 
-                    if [ -s trufflehog-git-verified.json ]; then
-                        echo "📊 TruffleHog scan completed"
-                        SECRETS_COUNT=$(jq 'if type=="array" then length else 0 end' trufflehog-git-verified.json 2>/dev/null || echo "0")
-                        echo "🚨 Secrets found: $SECRETS_COUNT"
+                    # Ensure file is valid JSON even if no secrets
+                    if [ ! -s trufflehog-git-verified.json ]; then
+                        echo "[]" > trufflehog-git-verified.json
+                    fi
 
-                        if [ -n "$SECRETS_COUNT" ] && [ "$SECRETS_COUNT" -gt 0 ]; then
-                            echo "⚠️ WARNING: Secrets detected in repository!"
-                            echo "📄 Secret details:"
-                            jq -r '.[] | "🔑 " + .DetectorName + ": " + .SourceMetadata.Data.Git.file + ":" + (.SourceMetadata.Data.Git.line|tostring)' trufflehog-git-verified.json || true
-                        else
-                            echo "✅ No secrets detected - repository is clean!"
-                        fi
+                    SECRETS_COUNT=$(jq 'if type=="array" then length else 0 end' trufflehog-git-verified.json)
+                    echo "🚨 Secrets found: $SECRETS_COUNT"
+
+                    if [ "$SECRETS_COUNT" -gt 0 ]; then
+                        echo "⚠️ WARNING: Secrets detected in repository!"
+                        jq -r '.[] | "🔑 " + .DetectorName + ": " + .SourceMetadata.Data.Git.file + ":" + (.SourceMetadata.Data.Git.line|tostring)' trufflehog-git-verified.json || true
+                        exit 1
                     else
-                        echo "⚠️ TruffleHog results file not found or empty"
+                        echo "✅ No secrets detected - repository is clean!"
                     fi
                 '''
             }
@@ -98,6 +98,7 @@ pipeline {
                 }
             }
         }
+
         // STAGE 2: SNYK SECURITY ANALYSIS
         stage('Snyk Security Analysis') {
             stages {
